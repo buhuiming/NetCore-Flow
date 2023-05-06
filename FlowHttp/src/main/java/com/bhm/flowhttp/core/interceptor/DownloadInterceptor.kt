@@ -10,11 +10,14 @@ import okhttp3.Interceptor
  * @date :2022/9/16 17:00
  */
 class DownloadInterceptor {
-    fun make(builder: HttpBuilder?): Interceptor {
+    fun make(builder: HttpBuilder): Interceptor {
         return Interceptor { chain: Interceptor.Chain ->
             val response = chain.proceed(chain.request())
+            response.body?.let {
+
+            }
             response.newBuilder().body(
-                DownloadResponseBody(response.body!!, builder)
+                response.body?.let { DownloadResponseBody(it, builder) }
             ).build()
         }
     }

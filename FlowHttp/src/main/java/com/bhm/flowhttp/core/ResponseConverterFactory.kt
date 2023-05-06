@@ -1,5 +1,8 @@
 package com.bhm.flowhttp.core
 
+import com.bhm.flowhttp.define.CODE_KEY
+import com.bhm.flowhttp.define.DATA_KEY
+import com.bhm.flowhttp.define.MESSAGE_KEY
 import com.bhm.flowhttp.define.OK_CODE
 import com.google.gson.Gson
 import retrofit2.Converter
@@ -11,9 +14,9 @@ import java.lang.reflect.Type
 
 class ResponseConverterFactory private constructor(
     gson: Gson?,
-    private val messageKey: String = "message",
-    private val codeKey: String = "code",
-    private val dataKey: String = "data",
+    private val messageKey: String = MESSAGE_KEY,
+    private val codeKey: String = CODE_KEY,
+    private val dataKey: String = DATA_KEY,
     private val successCode: Int = OK_CODE
 ) : Converter.Factory() {
     private val gson: Gson

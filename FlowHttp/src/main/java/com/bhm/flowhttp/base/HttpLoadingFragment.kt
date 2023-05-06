@@ -6,17 +6,15 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
+import com.bhm.flowhttp.R
 import com.bhm.flowhttp.core.HttpBuilder
-import com.bhm.rxhttp.R
-import com.trello.rxlifecycle4.components.support.RxDialogFragment
 import java.util.*
 
-open class HttpLoadingFragment(private val builder: HttpBuilder) : RxDialogFragment() {
+open class HttpLoadingFragment(private val builder: HttpBuilder) : DialogFragment() {
 
     private var textView: TextView? = null
 
@@ -59,6 +57,7 @@ open class HttpLoadingFragment(private val builder: HttpBuilder) : RxDialogFragm
         //防止横竖屏切换时 getFragmentManager置空引起的问题：
         //Attempt to invoke virtual method 'android.app.FragmentTransaction
         //android.app.FragmentManager.beginTransaction()' on a null object reference
+        @Suppress("DEPRECATION")
         if (fragmentManager == null) return
         super.dismissAllowingStateLoss()
     }
@@ -94,17 +93,18 @@ open class HttpLoadingFragment(private val builder: HttpBuilder) : RxDialogFragm
     }
 
     open fun initDialog(): Dialog {
-        val inflater = LayoutInflater.from(activity)
-        @SuppressLint("InflateParams") val v =
-            inflater.inflate(R.layout.layout_dialog_app_loading, null) // 得到加载view
         val dialog = Dialog(requireActivity(), R.style.loading_dialog) // 创建自定义样式dialog
-        dialog.setContentView(
-            v, ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        ) // 设置布局
-        textView = v.findViewById(R.id.dialog_text_loading)
+        @SuppressLint("InflateParams")
+        val view = activity?.layoutInflater?.inflate(R.layout.layout_dialog_app_loading, null) // 得到加载view
+        view?.let {
+            dialog.setContentView(
+                it, ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            ) // 设置布局
+            textView = it.findViewById(R.id.dialog_text_loading)
+        }
         if (!TextUtils.isEmpty(builder.loadingTitle)) {
             textView?.text = builder.loadingTitle
         }

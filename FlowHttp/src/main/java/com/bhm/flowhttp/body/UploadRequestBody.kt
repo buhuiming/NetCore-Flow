@@ -1,11 +1,12 @@
 package com.bhm.flowhttp.body
 
 import android.annotation.SuppressLint
+import androidx.lifecycle.lifecycleScope
 import com.bhm.flowhttp.core.HttpBuilder
 import com.bhm.flowhttp.core.callback.UploadCallBack
 import com.bhm.flowhttp.define.CommonUtil
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Observable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okio.*
@@ -35,7 +36,7 @@ class UploadRequestBody(private val mRequestBody: RequestBody, private val httpB
         if (sink is Buffer
             || sink.toString().contains(
                 "com.android.tools.profiler.support.network.HttpTracker\$OutputStreamTracker")) {
-            mRequestBody.writeTo(sink);
+            mRequestBody.writeTo(sink)
         } else {
             val bufferedSink: BufferedSink
             val mCountingSink = CountingSink(sink)
@@ -59,23 +60,19 @@ class UploadRequestBody(private val mRequestBody: RequestBody, private val httpB
                         contentLength = contentLength()
                     }
                     if (bytesWritten == 0L) {
-                        Observable.just(bytesWritten)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe {
-                                CommonUtil.logger(httpBuilder, "upLoad-- > ", "begin upLoad")
-                            }
+                        httpBuilder.activity.lifecycleScope.launch(Dispatchers.Main) {
+                            CommonUtil.logger(httpBuilder, "upLoad-- > ", "begin upLoad")
+                        }
                     }
                     bytesWritten += byteCount
                     val progress = (bytesWritten * 100 / contentLength).toInt()
-                    Observable.just(bytesWritten)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            callBack.onProgress(
-                                if (progress > 100) 100 else progress,
-                                byteCount,
-                                contentLength
-                            )
-                        }
+                    httpBuilder.activity.lifecycleScope.launch(Dispatchers.Main) {
+                        callBack.onProgress(
+                            if (progress > 100) 100 else progress,
+                            byteCount,
+                            contentLength
+                        )
+                    }
                 }
             }
         }

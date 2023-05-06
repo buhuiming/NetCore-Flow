@@ -23,7 +23,7 @@ open class HttpLoadingDialog {
             }
             val fm = builder.activity.supportFragmentManager
             showAgain =
-                if (!httpLoadingFragment!!.isAdded && null == fm.findFragmentByTag("default")) {
+                if (httpLoadingFragment?.isAdded == false && null == fm.findFragmentByTag("default")) {
                     httpLoadingFragment?.show(fm, "default")
                     false
                 } else {
@@ -33,8 +33,8 @@ open class HttpLoadingDialog {
         }
     }
 
-    open fun initDialog(builder: HttpBuilder?): HttpLoadingFragment {
-        return HttpLoadingFragment(builder!!)
+    open fun initDialog(builder: HttpBuilder): HttpLoadingFragment {
+        return HttpLoadingFragment(builder)
     }
 
     fun dismissLoading(activity: Activity?) {

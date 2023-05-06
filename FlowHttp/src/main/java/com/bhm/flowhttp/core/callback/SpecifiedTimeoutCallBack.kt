@@ -1,8 +1,8 @@
 package com.bhm.flowhttp.core.callback
 
+import android.os.Handler
 import android.os.Looper
-import com.bhm.flowhttp.base.WeakHandler
-import io.reactivex.rxjava3.disposables.Disposable
+import java.lang.ref.WeakReference
 
 /**
  * @author Buhuiming
@@ -11,18 +11,24 @@ import io.reactivex.rxjava3.disposables.Disposable
  */
 abstract class SpecifiedTimeoutCallBack<T>: CallBackImp<T> {
 
-    private var mainHandler: WeakHandler? = null
+    private var mainHandler: Handler? = null
+
+    private var activityWeakReference: WeakReference<Handler.Callback?>
 
     private var _specifiedTimeout: (() -> Unit)? = null
 
     init {
-        mainHandler = WeakHandler(Looper.getMainLooper()) { msg ->
+        activityWeakReference = WeakReference<Handler.Callback?>(Handler.Callback { msg ->
             when (msg.what) {
                 DELAY -> {
                     onSpecifiedTimeout()
                     done()
                 }
             }
+            false
+        })
+        mainHandler = Handler(Looper.getMainLooper()) { msg ->
+            activityWeakReference.get()?.handleMessage(msg)
             false
         }
     }

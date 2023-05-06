@@ -1,6 +1,9 @@
 package com.bhm.flowhttp.core
 
 import com.bhm.flowhttp.base.HttpLoadingDialog
+import com.bhm.flowhttp.define.CODE_KEY
+import com.bhm.flowhttp.define.DATA_KEY
+import com.bhm.flowhttp.define.MESSAGE_KEY
 import com.bhm.flowhttp.define.OK_CODE
 import okhttp3.OkHttpClient
 
@@ -28,9 +31,9 @@ class HttpConfig(builder: Builder) {
         internal var defaultHeader: HashMap<String, String>? = null
         internal var delaysProcessLimitTimeMillis: Long = 0
         internal var specifiedTimeoutMillis: Long = 0
-        internal var messageKey: String = "message"
-        internal var codeKey: String = "code"
-        internal var dataKey: String = "data"
+        internal var messageKey: String = MESSAGE_KEY
+        internal var codeKey: String = CODE_KEY
+        internal var dataKey: String = DATA_KEY
         internal var successCode: Int = OK_CODE
 
         fun setLoadingDialog(setDialog: HttpLoadingDialog?) = apply {
@@ -99,10 +102,10 @@ class HttpConfig(builder: Builder) {
             this.specifiedTimeoutMillis = specifiedTimeoutMillis
         }
 
-        fun setJsonCovertKey(messageKey: String = "message",
-                             codeKey: String = "code",
-                             dataKey: String = "data",
-                             successCode: Int = OK_CODE) {
+        fun setJsonCovertKey(messageKey: String = MESSAGE_KEY,
+                             codeKey: String = CODE_KEY,
+                             dataKey: String = DATA_KEY,
+                             successCode: Int = OK_CODE) = apply {
             this.messageKey = messageKey
             this.codeKey = codeKey
             this.dataKey = dataKey
@@ -166,15 +169,15 @@ class HttpConfig(builder: Builder) {
             private set
 
         @JvmStatic
-        var messageKey: String = "message"
+        var messageKey: String = MESSAGE_KEY
             private set
 
         @JvmStatic
-        var codeKey: String = "code"
+        var codeKey: String = CODE_KEY
             private set
 
         @JvmStatic
-        var dataKey: String = "data"
+        var dataKey: String = DATA_KEY
             private set
 
         @JvmStatic

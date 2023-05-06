@@ -1,16 +1,16 @@
 package com.bhm.flowhttp.core
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.widget.Toast
-import com.bhm.flowhttp.base.HttpActivity
+import androidx.fragment.app.FragmentActivity
 import com.bhm.flowhttp.base.HttpLoadingDialog
 import com.bhm.flowhttp.core.HttpConfig.Companion.cancelable
 import com.bhm.flowhttp.core.HttpConfig.Companion.httpLoadingDialog
 import com.bhm.flowhttp.core.HttpConfig.Companion.writtenLength
 import com.bhm.flowhttp.core.callback.CallBackImp
+import com.bhm.flowhttp.define.*
 import com.bhm.flowhttp.define.CommonUtil.logger
-import com.bhm.flowhttp.define.OK_CODE
-import com.bhm.flowhttp.define.ResultException
 import com.google.gson.JsonSyntaxException
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeoutException
 @Suppress("unused")
 class HttpBuilder(private val builder: Builder) {
     private var currentRequestDateTamp: Long = 0
-    val activity: HttpActivity
+    val activity: FragmentActivity
         get() = builder.activity
     var callBack: CallBackImp<*>? = null
         private set
@@ -300,10 +300,10 @@ class HttpBuilder(private val builder: Builder) {
             this.specifiedTimeoutMillis = specifiedTimeoutMillis
         }
 
-        fun setJsonCovertKey(messageKey: String = "message",
-                             codeKey: String = "code",
-                             dataKey: String = "data",
-                             successCode: Int = OK_CODE) {
+        fun setJsonCovertKey(messageKey: String = MESSAGE_KEY,
+                             codeKey: String = CODE_KEY,
+                             dataKey: String = DATA_KEY,
+                             successCode: Int = OK_CODE) = apply {
             this.messageKey = messageKey
             this.codeKey = codeKey
             this.dataKey = dataKey
