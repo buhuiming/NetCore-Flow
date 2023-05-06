@@ -15,7 +15,7 @@ import java.lang.reflect.Type
  * 针对整型的解析，先写一个解析适配器，实现JsonSerializer, JsonDeserializer
  * 重写解析方法，先尝试用String类型解析，如果等于空字符串”“或者null，则返回0值
  * 否则再尝试用整型解析，并且catch数字格式异常转成Json解析异常抛出
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 class IntegerDefaultAdapter : JsonSerializer<Int?>, JsonDeserializer<Int> {
     @Throws(JsonParseException::class)

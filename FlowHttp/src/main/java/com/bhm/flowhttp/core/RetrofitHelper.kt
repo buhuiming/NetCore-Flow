@@ -9,7 +9,7 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 class RetrofitHelper(private val builder: HttpBuilder) {
 

@@ -11,7 +11,7 @@ import leakcanary.LeakCanary
 /**
  * @author Buhuiming
  * @description:
- * @date :2023/2/6 11:15
+ * @date :2023/5/6
  */
 class StartActivity: AppCompatActivity() {
 

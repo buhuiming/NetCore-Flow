@@ -6,7 +6,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 class MainUIAdapter(data: MutableList<String?>?) :
     BaseQuickAdapter<String?, BaseViewHolder>(R.layout.layout_main_ui_item, data) {

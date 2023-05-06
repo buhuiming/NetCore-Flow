@@ -7,7 +7,7 @@ import okhttp3.Interceptor
 /**
  * @author Buhuiming
  * @description: 上传进度拦截器
- * @date :2022/9/16 17:00
+ * @date :2023/5/6
  */
 class UploadInterceptor {
     fun make(builder: HttpBuilder?): Interceptor {

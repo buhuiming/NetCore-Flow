@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 @Suppress("unused")
 class HttpBuilder(private val builder: Builder) {

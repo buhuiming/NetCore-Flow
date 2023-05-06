@@ -10,7 +10,7 @@ import java.util.regex.Pattern
 /**
  * @author Buhuiming
  * @description: http拦截器，打印数据
- * @date :2022/9/16 16:47
+ * @date :2023/5/6
  */
 class LoggingInterceptor {
 

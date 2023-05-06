@@ -8,7 +8,7 @@ import com.bhm.flowhttp.define.OK_CODE
 import okhttp3.OkHttpClient
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 @Suppress("unused")
 class HttpConfig(builder: Builder) {

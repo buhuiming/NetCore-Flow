@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 @Suppress("unused")
 class DoGetEntity : Serializable {

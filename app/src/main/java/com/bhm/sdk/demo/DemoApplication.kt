@@ -5,7 +5,7 @@ import com.bhm.sdk.demo.tools.MyHttpLoadingDialog
 import com.bhm.flowhttp.core.HttpConfig
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 class DemoApplication : Application() {
     override fun onCreate() {

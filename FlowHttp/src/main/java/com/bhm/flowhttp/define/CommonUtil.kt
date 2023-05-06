@@ -9,7 +9,7 @@ import java.io.IOException
 import java.io.InputStream
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 object CommonUtil {
     /**

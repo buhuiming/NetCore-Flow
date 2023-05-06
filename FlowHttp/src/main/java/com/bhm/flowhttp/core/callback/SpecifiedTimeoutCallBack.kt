@@ -7,7 +7,7 @@ import java.lang.ref.WeakReference
 /**
  * @author Buhuiming
  * @description: 指定超时，在规定的时间内没有结果(成功/失败)，则触发。用在提示用户网络环境不给力的情况
- * @date :2023/2/10 15:38
+ * @date :2023/5/6
  */
 abstract class SpecifiedTimeoutCallBack<T>: CallBackImp<T> {
 

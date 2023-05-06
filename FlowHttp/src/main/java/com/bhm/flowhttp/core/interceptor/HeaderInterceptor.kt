@@ -6,7 +6,7 @@ import okhttp3.Interceptor
 /**
  * @author Buhuiming
  * @description: 表头拦截器
- * @date :2022/9/16 16:57
+ * @date :2023/5/6
  */
 class HeaderInterceptor {
     fun make(builder: HttpBuilder): Interceptor {

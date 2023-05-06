@@ -10,7 +10,7 @@ import okhttp3.Interceptor
 /**
  * @author Buhuiming
  * @description: 缓存拦截器 设置相关参数
- * @date :2022/9/16 16:55
+ * @date :2023/5/6
  */
 class CacheInterceptor {
 

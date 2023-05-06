@@ -13,7 +13,7 @@ import okio.*
 import java.io.IOException
 
 /** 下载请求体
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 class DownloadResponseBody(
     private val responseBody: ResponseBody,

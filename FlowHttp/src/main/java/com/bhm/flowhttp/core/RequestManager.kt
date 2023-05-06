@@ -10,7 +10,7 @@ import okhttp3.ResponseBody
 /**
  * @author Buhuiming
  * @description:
- * @date :2022/9/21 10:39
+ * @date :2023/5/6
  */
 @Suppress("SENSELESS_COMPARISON")
 class RequestManager private constructor() {

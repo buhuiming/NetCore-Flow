@@ -4,7 +4,7 @@ import com.bhm.flowhttp.core.HttpBuilder
 import android.app.Activity
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 open class HttpLoadingDialog {
 

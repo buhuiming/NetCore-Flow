@@ -10,7 +10,7 @@ import okhttp3.ResponseBody
 import retrofit2.http.*
 
 /**
- * Created by bhm on 2022/9/15.
+ * Created by bhm on 2023/5/6.
  */
 interface HttpApi {
     @GET("/api/4/news/latest")
