@@ -3,8 +3,7 @@ package com.bhm.flowhttp.core
 import com.bhm.flowhttp.core.callback.CommonCallBack
 import com.bhm.flowhttp.core.callback.DownloadCallBack
 import com.bhm.flowhttp.core.callback.UploadCallBack
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.disposables.Disposable
+import kotlinx.coroutines.Job
 import okhttp3.ResponseBody
 
 /**
@@ -36,52 +35,37 @@ class RequestManager private constructor() {
 
     class Manager<E : Any> {
 
-        private var httpBuilder: HttpBuilder? = null
+        private lateinit var httpBuilder: HttpBuilder
 
-        private var baseUrl: String? = null
+        private lateinit var baseUrl: String
 
-        private var observable: Observable<E>? = null
-
-        private var downloadObservable: Observable<ResponseBody>? = null
-
-        fun setHttpBuilder(httpBuilder: HttpBuilder?) = apply {
+        fun setHttpBuilder(httpBuilder: HttpBuilder) = apply {
             this.httpBuilder = httpBuilder
         }
 
-        fun setBaseUrl(url: String?) = apply {
+        fun setBaseUrl(url: String) = apply {
             baseUrl = url
         }
 
-        fun <T : Any> httpCall(aClass: Class<T>, httpCall:(T) -> Observable<E>) = apply {
-            val api = RetrofitHelper(httpBuilder!!).createRequest(aClass, baseUrl!!)
-            observable = httpCall(api)
-        }
-
-        fun <T : Any> uploadCall(aClass: Class<T>, httpCall:(T) -> Observable<E>) = apply {
-            this.httpCall(aClass, httpCall)
-        }
-
-        fun <T : Any> downloadCall(aClass: Class<T>, httpCall:(T) -> Observable<ResponseBody>) = apply {
-            val api = RetrofitHelper(httpBuilder!!).createRequest(aClass, baseUrl!!)
-            downloadObservable = httpCall(api)
-        }
-
-        fun execute(callBack: CommonCallBack<E>.() -> Unit): Disposable? {
+        fun <T : Any> execute(aClass: Class<T>, httpCall: suspend (T) -> E, callBack: CommonCallBack<E>.() -> Unit): Job {
+            val api = RetrofitHelper(httpBuilder).createRequest(aClass, baseUrl)
             val call = CommonCallBack<E>()
             call.apply(callBack)
-            return httpBuilder?.enqueue(observable!!, call)
+            return httpBuilder.enqueue(api, httpCall, call)
         }
 
-        fun uploadExecute(callBack: UploadCallBack<E>.() -> Unit): Disposable? {
+        fun <T : Any> uploadEnqueue(aClass: Class<T>, httpCall: suspend (T) -> E, callBack: UploadCallBack<E>.() -> Unit): Job {
+            val api = RetrofitHelper(httpBuilder).createRequest(aClass, baseUrl)
             val call = UploadCallBack<E>()
             call.apply(callBack)
-            return httpBuilder?.uploadEnqueue(observable!!, call)
+            return httpBuilder.uploadEnqueue(api, httpCall, call)
         }
 
-        fun downloadExecute(callBack: DownloadCallBack.() -> Unit): Disposable? {
+        fun <T : Any> downloadExecute(aClass: Class<T>, httpCall: suspend (T) -> ResponseBody, callBack: DownloadCallBack.() -> Unit): Job {
+            val api = RetrofitHelper(httpBuilder).createRequest(aClass, baseUrl)
             val call = DownloadCallBack()
             call.apply(callBack)
-            return httpBuilder?.downloadEnqueue(downloadObservable!!, call)
+            return httpBuilder.downloadEnqueue(api, httpCall, call)
         }
     }
 }

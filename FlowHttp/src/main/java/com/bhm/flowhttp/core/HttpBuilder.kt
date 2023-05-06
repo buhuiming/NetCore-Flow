@@ -1,9 +1,12 @@
+@file:Suppress("unused")
+
 package com.bhm.flowhttp.core
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.bhm.flowhttp.base.HttpLoadingDialog
 import com.bhm.flowhttp.core.HttpConfig.Companion.cancelable
 import com.bhm.flowhttp.core.HttpConfig.Companion.httpLoadingDialog
@@ -12,25 +15,18 @@ import com.bhm.flowhttp.core.callback.CallBackImp
 import com.bhm.flowhttp.define.*
 import com.bhm.flowhttp.define.CommonUtil.logger
 import com.google.gson.JsonSyntaxException
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.ObservableTransformer
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.disposables.Disposable
-import io.reactivex.rxjava3.disposables.DisposableContainer
-import io.reactivex.rxjava3.functions.Action
-import io.reactivex.rxjava3.functions.Consumer
-import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody
 import retrofit2.HttpException
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 /**
  * Created by bhm on 2023/5/6.
  */
-@Suppress("unused")
 class HttpBuilder(private val builder: Builder) {
     private var currentRequestDateTamp: Long = 0
     val activity: FragmentActivity
@@ -45,8 +41,8 @@ class HttpBuilder(private val builder: Builder) {
         get() = builder.dialog
     private val isDefaultToast: Boolean
         get() = builder.isDefaultToast
-    val disposeManager: DisposeManager?
-        get() = builder.disposeManager
+    val jobManager: JobManager
+        get() = builder.jobManager
     val readTimeOut: Int
         get() = builder.readTimeOut
     val connectTimeOut: Int
@@ -88,132 +84,128 @@ class HttpBuilder(private val builder: Builder) {
     /*
     *  设置请求回调
     */
-    fun <T: Any> enqueue(observable: Observable<T>, callBack: CallBackImp<T>?): Disposable {
+    fun <T: Any, E: Any> enqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
         this.callBack = callBack
-        val disposable = observable
-            .compose(builder.activity.bindToLifecycle()) //管理生命周期
-            .compose(rxSchedulerHelper()) //发布事件io线程
-            .subscribe(
-                getBaseConsumer(callBack),
-                getThrowableConsumer(callBack),
-                getDefaultAction(callBack),
-                disposableContainer
-            )
-        currentRequestDateTamp = System.currentTimeMillis()
-        //做准备工作
-        callBack?.onStart(disposable, specifiedTimeoutMillis)
-        builder.disposeManager?.add(disposable)
-        return disposable
+        val job = activity.lifecycleScope.launch {
+            flow<E> {
+                val entity = httpCall(api)
+                if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
+                    delay(delaysProcessLimitTimeMillis)
+                    doBaseConsumer(callBack, entity)
+                } else {
+                    doBaseConsumer(callBack, entity)
+                }
+            }
+                .catch {
+                    logger(this@HttpBuilder, "ThrowableConsumer-> ", it.message) //抛异常
+                    if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
+                        delay(delaysProcessLimitTimeMillis)
+                        doThrowableConsumer(callBack, it)
+                    } else {
+                        doThrowableConsumer(callBack, it)
+                    }
+                }
+                .flowOn(Dispatchers.IO)
+                .onStart {
+                    callBack?.onStart(specifiedTimeoutMillis)
+                }
+                .onCompletion {
+                    callBack?.onComplete()
+                }
+                .flowOn(Dispatchers.Main)
+                .collect()
+            currentRequestDateTamp = System.currentTimeMillis()
+        }
+        builder.jobManager.add(job)
+        return job
     }
 
     /*
     *  设置上传文件回调
     */
-    fun <T: Any> uploadEnqueue(observable: Observable<T>, callBack: CallBackImp<T>?) = apply {
-        this.enqueue(observable, callBack)
+    fun <T: Any, E: Any> uploadEnqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
+        return this.enqueue(api, httpCall, callBack)
     }
 
     /*
     *  设置文件下载回调
     */
-    fun <T: Any> downloadEnqueue(observable: Observable<ResponseBody>, callBack: CallBackImp<T>?): Disposable {
+    fun <T: Any, E: Any> downloadEnqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
         this.callBack = callBack
-        val disposable = observable
-            .compose(builder.activity.bindToLifecycle()) //管理生命周期
-            .subscribeOn(Schedulers.io())
-            .unsubscribeOn(Schedulers.io())
-            .map { responseBody -> responseBody.byteStream() }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({}) { throwable ->
-                callBack?.onFail(throwable)
-                if (null != builder.dialog && builder.isShowDialog) {
-                    builder.dialog?.dismissLoading(builder.activity)
+        val job = activity.lifecycleScope.launch {
+            flow<E> {
+                val entity = httpCall(api)
+                if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
+                    delay(delaysProcessLimitTimeMillis)
+                    doBaseConsumer(callBack, entity)
+                } else {
+                    doBaseConsumer(callBack, entity)
                 }
-                builder.disposeManager?.removeDispose()
             }
-        callBack?.onStart(disposable, specifiedTimeoutMillis)
-        builder.disposeManager?.add(disposable)
-        return disposable
-    }
-
-    @SuppressLint("CheckResult")
-    private fun <T: Any> getBaseConsumer(callBack: CallBackImp<T>?): Consumer<T> {
-        return Consumer { t ->
-            if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                Observable.timer(delaysProcessLimitTimeMillis, TimeUnit.MILLISECONDS)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { doBaseConsumer(callBack, t) }
-            } else {
-                doBaseConsumer(callBack, t)
-            }
+                .flowOn(Dispatchers.IO)
+                .catch {
+                    callBack?.onFail(it)
+                    if (null != builder.dialog && builder.isShowDialog) {
+                        builder.dialog?.dismissLoading(builder.activity)
+                    }
+                    builder.jobManager.removeJob()
+                }
+                .onStart {
+                    callBack?.onStart(specifiedTimeoutMillis)
+                }
+                .onCompletion {
+                    callBack?.onComplete()
+                }
+                .flowOn(Dispatchers.Main)
+                .collect()
+            currentRequestDateTamp = System.currentTimeMillis()
         }
+        builder.jobManager.add(job)
+        return job
     }
 
-    private fun <T: Any> doBaseConsumer(callBack: CallBackImp<T>?, t: T) {
-        callBack?.onSuccess(t)
-        if (isShowDialog && null != dialog) {
-            dialog?.dismissLoading(activity)
-        }
-    }
-
-    @SuppressLint("CheckResult")
-    private fun <T: Any> getThrowableConsumer(callBack: CallBackImp<T>?): Consumer<Throwable> {
-        return Consumer { e ->
-            logger(this@HttpBuilder, "ThrowableConsumer-> ", e.message) //抛异常
-            if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                Observable.timer(delaysProcessLimitTimeMillis, TimeUnit.MILLISECONDS)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { doThrowableConsumer(callBack, e) }
-            } else {
-                doThrowableConsumer(callBack, e)
+    private fun <E: Any> doBaseConsumer(callBack: CallBackImp<E>?, t: E) {
+        activity.lifecycleScope.launch(Dispatchers.Main) {
+            callBack?.onSuccess(t)
+            if (isShowDialog && null != dialog) {
+                dialog?.dismissLoading(activity)
             }
         }
     }
 
     private fun <T: Any> doThrowableConsumer(callBack: CallBackImp<T>?, e: Throwable) {
-        callBack?.onFail(e)
-        if (isShowDialog && null != dialog) {
-            dialog?.dismissLoading(activity)
-        }
-        if (isDefaultToast) {
-            if (e is HttpException) {
-                if (e.code() == 404) {
-                    Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
-                } else if (e.code() == 504) {
-                    Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+        activity.lifecycleScope.launch(Dispatchers.Main) {
+            callBack?.onFail(e)
+            if (isShowDialog && null != dialog) {
+                dialog?.dismissLoading(activity)
+            }
+            if (isDefaultToast) {
+                if (e is HttpException) {
+                    if (e.code() == 404) {
+                        Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
+                    } else if (e.code() == 504) {
+                        Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                    }
+                } else if (e is IndexOutOfBoundsException
+                    || e is NullPointerException
+                    || e is JsonSyntaxException
+                    || e is IllegalStateException
+                    || e is ResultException
+                ) {
+                    Toast.makeText(activity, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
+                } else if (e is TimeoutException) {
+                    Toast.makeText(activity, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
                 }
-            } else if (e is IndexOutOfBoundsException
-                || e is NullPointerException
-                || e is JsonSyntaxException
-                || e is IllegalStateException
-                || e is ResultException
-            ) {
-                Toast.makeText(activity, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
-            } else if (e is TimeoutException) {
-                Toast.makeText(activity, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(activity, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    /** 最终结果的处理
-     * @return 和getThrowableConsumer互斥
-     */
-    private fun <T: Any> getDefaultAction(callBack: CallBackImp<T>?): Action {
-        return Action { callBack?.onComplete() }
-    }
-
-    /** 做准备工作
-     * @return
-     */
-    private val disposableContainer: DisposableContainer
-        get() = CompositeDisposable()
-
-    class Builder(val activity: HttpActivity) {
-        internal var disposeManager: DisposeManager? = activity.disposeManager
+    class Builder(val activity: FragmentActivity) {
+        internal var jobManager: JobManager = JobManager()
         internal var isShowDialog = HttpConfig.isShowDialog
         internal var isCancelable = cancelable()
         internal var dialog = httpLoadingDialog
@@ -235,6 +227,16 @@ class HttpBuilder(private val builder: Builder) {
         internal var codeKey = HttpConfig.codeKey
         internal var dataKey = HttpConfig.dataKey
         internal var successCode = HttpConfig.successCode
+
+        init {
+            activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    super.onDestroy(owner)
+                    jobManager.clear()
+                    activity.lifecycle.removeObserver(this)
+                }
+            })
+        }
 
         fun setLoadingDialog(dialog: HttpLoadingDialog?) = apply {
             this.dialog = dialog
@@ -263,7 +265,9 @@ class HttpBuilder(private val builder: Builder) {
          * @param okHttpClient
          * @return
          */
-        @Deprecated("")
+        @Deprecated("使用此方法，将取消默认的设置，包括但不限于日志，缓存，下载，上传，网络，SSL。",
+            ReplaceWith("apply { this.okHttpClient = okHttpClient }")
+        )
         fun setOkHttpClient(okHttpClient: OkHttpClient?) = apply {
             this.okHttpClient = okHttpClient
         }
@@ -317,25 +321,13 @@ class HttpBuilder(private val builder: Builder) {
 
     companion object {
         @JvmStatic
-        fun create(activity: HttpActivity) = Builder(activity)
+        fun create(activity: FragmentActivity) = Builder(activity)
 
         @JvmStatic
-        fun getDefaultBuilder(activity: HttpActivity): HttpBuilder {
+        fun getDefaultBuilder(activity: FragmentActivity): HttpBuilder {
             return create(activity)
                 .setLoadingDialog(HttpLoadingDialog.defaultDialog)
                 .build()
-        }
-
-        /**
-         * 统一线程处理
-         * 发布事件io线程，接收事件主线程
-         */
-        @JvmStatic
-        private fun <T : Any> rxSchedulerHelper(): ObservableTransformer<T, T> { //compose处理线程
-            return ObservableTransformer { upstream ->
-                upstream.subscribeOn(Schedulers.io()) //读写文件、读写数据库、网络信息交互等
-                    .observeOn(AndroidSchedulers.mainThread()) //指定的是它之后的操作所在的线程。
-            }
         }
     }
 }

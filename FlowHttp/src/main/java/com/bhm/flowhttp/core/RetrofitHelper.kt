@@ -4,9 +4,7 @@ import com.bhm.flowhttp.adapter.IntegerDefaultAdapter
 import com.bhm.flowhttp.adapter.LongDefaultAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.bhm.flowhttp.core.ResponseConverterFactory.Companion.create
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 
 /**
  * Created by bhm on 2023/5/6.
@@ -20,8 +18,13 @@ class RetrofitHelper(private val builder: HttpBuilder) {
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
             .client(GenerateOkHttpClient().make(builder))
-            .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
-            .addConverterFactory(create(gsonBuilder, builder.messageKey, builder.codeKey, builder.dataKey, builder.successCode))
+            .addConverterFactory(ResponseConverterFactory.create(
+                gsonBuilder,
+                builder.messageKey,
+                builder.codeKey,
+                builder.dataKey,
+                builder.successCode)
+            )
             .build()
         return retrofit.create(clazz)
     }

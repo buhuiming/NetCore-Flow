@@ -1,14 +1,12 @@
 package com.bhm.flowhttp.core.callback
 
-import io.reactivex.rxjava3.disposables.Disposable
-
 
 /** 事件执行的回调
  * Created by bhm on 2023/5/6.
  */
 open class UploadCallBack<T> : ProgressCallBack<T>() {
 
-    private var _start: ((disposable: Disposable?) -> Unit)? = null
+    private var _start: (() -> Unit)? = null
 
     private var _progress: ((progress: Int, bytesWritten: Long, contentLength: Long) -> Unit)? = null
 
@@ -18,7 +16,7 @@ open class UploadCallBack<T> : ProgressCallBack<T>() {
 
     private var _complete: (() -> Unit)? = null
 
-    fun start(value: (disposable: Disposable?) -> Unit) {
+    fun start(value: () -> Unit) {
         _start = value
     }
 
@@ -38,9 +36,9 @@ open class UploadCallBack<T> : ProgressCallBack<T>() {
         _complete = value
     }
 
-    override fun onStart(disposable: Disposable?, specifiedTimeoutMillis: Long) {
-        super.onStart(disposable, specifiedTimeoutMillis)
-        _start?.invoke(disposable)
+    override fun onStart(specifiedTimeoutMillis: Long) {
+        super.onStart(specifiedTimeoutMillis)
+        _start?.invoke()
     }
 
     override fun onProgress(progress: Int, bytesWritten: Long, contentLength: Long) {

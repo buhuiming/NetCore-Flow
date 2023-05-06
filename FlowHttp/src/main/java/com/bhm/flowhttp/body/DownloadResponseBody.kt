@@ -67,7 +67,6 @@ class DownloadResponseBody(
                             if (totalBytesRead == totalBytes) {
                                 httpBuilder.activity.lifecycleScope.launch(Dispatchers.Main) {
                                     callBack.onProgress(100, bytesRead, totalBytes)
-                                    callBack.onComplete()
                                     CommonUtil.logger(httpBuilder, "DownLoad-- > ", "finish downLoad")
                                     if (null != httpBuilder.dialog && httpBuilder.isShowDialog) {
                                         httpBuilder.dialog?.dismissLoading(httpBuilder.activity)

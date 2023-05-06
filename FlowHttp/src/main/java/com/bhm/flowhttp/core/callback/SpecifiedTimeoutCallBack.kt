@@ -33,7 +33,7 @@ abstract class SpecifiedTimeoutCallBack<T>: CallBackImp<T> {
         }
     }
 
-    override fun onStart(disposable: Disposable?, specifiedTimeoutMillis: Long) {
+    override fun onStart(specifiedTimeoutMillis: Long) {
         mainHandler?.sendEmptyMessageDelayed(DELAY, specifiedTimeoutMillis)
     }
 

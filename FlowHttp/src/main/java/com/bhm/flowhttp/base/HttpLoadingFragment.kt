@@ -74,7 +74,7 @@ open class HttpLoadingFragment(private val builder: HttpBuilder) : DialogFragmen
                 ) {
                     if (builder.isCancelable) {
                         if (builder.isDialogDismissInterruptRequest) {
-                            builder.disposeManager?.removeDispose()
+                            builder.jobManager.removeJob()
                         }
                         dismiss()
                         return@OnKeyListener true
@@ -82,7 +82,7 @@ open class HttpLoadingFragment(private val builder: HttpBuilder) : DialogFragmen
                     if (System.currentTimeMillis() - onBackPressed > 1000) {
                         onBackPressed = System.currentTimeMillis()
                     } else {
-                        builder.disposeManager?.removeDispose()
+                        builder.jobManager.removeJob()
                         dismiss()
                     }
                 }

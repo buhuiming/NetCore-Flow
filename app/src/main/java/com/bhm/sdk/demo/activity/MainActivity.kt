@@ -8,14 +8,14 @@ import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bhm.netcore.R
-import com.bhm.flowhttp.base.HttpActivity
 import com.bhm.flowhttp.base.HttpLoadingDialog.Companion.defaultDialog
 import com.bhm.flowhttp.core.HttpBuilder
 import com.bhm.flowhttp.core.RequestManager
+import com.bhm.netcore.R
 import com.bhm.sdk.demo.adapter.MainUIAdapter
 import com.bhm.sdk.demo.entity.DoGetEntity
 import com.bhm.sdk.demo.entity.DoPostEntity
@@ -24,7 +24,7 @@ import com.bhm.sdk.demo.http.HttpApi
 import com.bhm.sdk.demo.tools.MyHttpLoadingDialog
 import com.bhm.sdk.demo.tools.Utils.getFile
 import com.tbruyelle.rxpermissions3.RxPermissions
-import io.reactivex.rxjava3.disposables.Disposable
+import kotlinx.coroutines.Job
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.MultipartBody.Part.Companion.createFormData
@@ -36,13 +36,13 @@ import java.io.File
 
 @Suppress("PrivatePropertyName")
 @SuppressLint("CheckResult")
-open class MainActivity : HttpActivity() {
+open class MainActivity : FragmentActivity() {
     private var main_recycle_view: RecyclerView? = null
     private var adapter: MainUIAdapter? = null
     private var progressBarHorizontal: ProgressBar? = null
     private var rxPermissions: RxPermissions? = null
-    private var down_Disposable: Disposable? = null
-    private var up_Disposable: Disposable? = null
+    private var downloadJob: Job? = null
+    private var uploadJob: Job? = null
     private var downLoadLength: Long = 0 //已下载的长度
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,17 +93,14 @@ open class MainActivity : HttpActivity() {
             0 -> doGet()
             1 -> doPost()
             2 -> upLoad()
-            3 -> disposeManager.removeDispose(up_Disposable)
+            3 -> uploadJob?.cancel()
             4 -> {
                 downLoadLength = 0
                 progressBarHorizontal?.progress = 0
                 downLoad()
             }
             5 -> {
-                if (!disposeManager.isExitDispose(down_Disposable!!)) {
-                    return
-                }
-                disposeManager.removeDispose(down_Disposable)
+                downloadJob?.cancel()
             }
             6 -> downLoad()
             else -> {}
@@ -156,19 +153,22 @@ open class MainActivity : HttpActivity() {
             .callManager<DoGetEntity>()
             .setHttpBuilder(HttpBuilder.getDefaultBuilder(this))//默认使用Application的配置
             .setBaseUrl("http://news-at.zhihu.com")
-            .httpCall(HttpApi::class.java) {
-                it.getData("Bearer aedfc1246d0b4c3f046be2d50b34d6ff", "1")
-            }
-            .execute {
-                //可以继承CommonCallBack，重写方法，比如在onFail中处理401，404等
-                success { response ->
-                    Log.i(javaClass.name, response.date!!)
-                    Toast.makeText(this@MainActivity, response.date, Toast.LENGTH_SHORT).show()
+            .execute(
+                HttpApi::class.java,
+                {
+                    it.getData("Bearer aedfc1246d0b4c3f046be2d50b34d6ff", "1")
+                },
+                {
+                    //可以继承CommonCallBack，重写方法，比如在onFail中处理401，404等
+                    success { response ->
+                        Log.i(javaClass.name, response.date!!)
+                        Toast.makeText(this@MainActivity, response.date, Toast.LENGTH_SHORT).show()
+                    }
+                    fail { e ->
+                        Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
-                fail { e ->
-                    Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
-                }
-            }
+            )
     }
 
     private fun doPost() {
@@ -180,30 +180,34 @@ open class MainActivity : HttpActivity() {
                 dialogDismissInterruptRequest = false
             )
             .setIsLogOutPut(true)
-            .setSpecifiedTimeoutMillis(1000)
+            .setJsonCovertKey(successCode = 0)
+            .setSpecifiedTimeoutMillis(500)
             .setIsDefaultToast(false)
             .build()
         RequestManager.builder()
             .callManager<DoPostEntity>()
             .setHttpBuilder(httpBuilder)
             .setBaseUrl("https://www.pgyer.com/")
-            .httpCall(HttpApi::class.java) {
-                it.getDataPost("963ca3d091ba71bdd8596994ad7549b5", "android")
-            }
-            .execute {
-                success { response ->
-                    Log.i(javaClass.name, response.toString())
-                    Toast.makeText(this@MainActivity, response.data?.key, Toast.LENGTH_SHORT).show()
+            .execute(
+                HttpApi::class.java,
+                {
+                    it.getDataPost("963ca3d091ba71bdd8596994ad7549b5", "android")
+                },
+                {
+                    success { response ->
+                        Log.i(javaClass.name, response.toString())
+                        Toast.makeText(this@MainActivity, response.data?.key, Toast.LENGTH_SHORT).show()
+                    }
+                    fail { e ->
+                        AlertDialog.Builder(this@MainActivity)
+                            .setMessage(e?.message)
+                            .setNegativeButton("确定") { dialog, _ -> dialog.dismiss() }.show()
+                    }
+                    specifiedTimeout {
+                        Log.i(javaClass.name, "请求超过0.5s还没有完成")
+                    }
                 }
-                fail { e ->
-                    AlertDialog.Builder(this@MainActivity)
-                        .setMessage(e?.message)
-                        .setNegativeButton("确定") { dialog, _ -> dialog.dismiss() }.show()
-                }
-                specifiedTimeout {
-                    Log.i(javaClass.name, "请求超过1s还没有完成")
-                }
-            }
+            )
     }
 
     private fun upLoadFile() {
@@ -220,40 +224,42 @@ open class MainActivity : HttpActivity() {
             .setIsLogOutPut(true) //默认是false
             .setIsDefaultToast(true)
             .build()
-        RequestManager.builder()
+        uploadJob = RequestManager.builder()
             .callManager<UpLoadEntity>()
             .setHttpBuilder(builder)
             .setBaseUrl("https://upload.pgyer.com/")
-            .uploadCall(HttpApi::class.java) {
-                it.upload(
-                    "8fa554a43b63bad477fd55e72839528e".toRequestBody("text/plain".toMediaTypeOrNull()),
-                    "963ca3d091ba71bdd8596994ad7549b5".toRequestBody("text/plain".toMediaTypeOrNull()),
-                    part)
-            }
-            .uploadExecute {
-                start { disposable ->
-                    up_Disposable = disposable
-                    progressBarHorizontal?.progress = 0
+            .uploadEnqueue(
+                HttpApi::class.java,
+                {
+                    it.upload(
+                        "8fa554a43b63bad477fd55e72839528e".toRequestBody("text/plain".toMediaTypeOrNull()),
+                        "963ca3d091ba71bdd8596994ad7549b5".toRequestBody("text/plain".toMediaTypeOrNull()),
+                        part)
+                },
+                {
+                    start {
+                        progressBarHorizontal?.progress = 0
+                    }
+                    progress { progress, bytesWritten, contentLength ->
+                        progressBarHorizontal?.progress = progress
+                        Log.e(
+                            "upLoad---- > ", "progress : " + progress + "，bytesWritten : "
+                                    + bytesWritten + "，contentLength : " + contentLength
+                        )
+                    }
+                    success { response ->
+                        Log.i(javaClass.name, response.data?.appCreated?: "")
+                        Toast.makeText(this@MainActivity, response.data?.appCreated, Toast.LENGTH_SHORT).show()
+                    }
+                    fail { e ->
+                        Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
+                    }
+                    complete {
+                        Log.i(javaClass.name, "onFinishUpload")
+                        Toast.makeText(this@MainActivity, "onFinishUpload", Toast.LENGTH_SHORT).show()
+                    }
                 }
-                progress { progress, bytesWritten, contentLength ->
-                    progressBarHorizontal?.progress = progress
-                    Log.e(
-                        "upLoad---- > ", "progress : " + progress + "，bytesWritten : "
-                                + bytesWritten + "，contentLength : " + contentLength
-                    )
-                }
-                success { response ->
-                    Log.i(javaClass.name, response.data?.appCreated?: "")
-                    Toast.makeText(this@MainActivity, response.data?.appCreated, Toast.LENGTH_SHORT).show()
-                }
-                fail { e ->
-                    Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
-                }
-                complete {
-                    Log.i(javaClass.name, "onFinishUpload")
-                    Toast.makeText(this@MainActivity, "onFinishUpload", Toast.LENGTH_SHORT).show()
-                }
-            }
+            )
     }
 
     /**
@@ -281,35 +287,35 @@ open class MainActivity : HttpActivity() {
             .setSpecifiedTimeoutMillis(2000)
             .setIsDefaultToast(true)
             .build()
-        RequestManager.builder()
+        downloadJob = RequestManager.builder()
             .callManager<ResponseBody>()
             .setHttpBuilder(builder)
             .setBaseUrl("http://s.downpp.com/")
-            .downloadCall(HttpApi::class.java) {
-                it.downLoad("bytes=$downLoadLength-", "http://s.downpp.com/apk9/shwnl4.0.0_2265.com.apk")
-            }
-            .downloadExecute {
-                start { disposable ->
-                    down_Disposable = disposable
+            .downloadExecute(
+                HttpApi::class.java,
+                {
+                    it.downLoad("bytes=$downLoadLength-", "http://s.downpp.com/apk9/shwnl4.0.0_2265.com.apk")
+                },
+                {
+                    progress { progress, bytesWritten, contentLength ->
+                        progressBarHorizontal?.progress = progress
+                        downLoadLength += bytesWritten
+                        Log.e(
+                            "upLoad---- > ", "progress : " + progress + "，bytesWritten : "
+                                    + bytesWritten + "，contentLength : " + contentLength
+                        )
+                    }
+                    fail { e ->
+                        Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
+                    }
+                    complete {
+                        Log.i(javaClass.name, "onFinishDownload")
+                        Toast.makeText(this@MainActivity, "onFinishDownload", Toast.LENGTH_SHORT).show()
+                    }
+                    specifiedTimeout {
+                        Log.i(javaClass.name, "请求超过2s还没有完成")
+                    }
                 }
-                progress { progress, bytesWritten, contentLength ->
-                    progressBarHorizontal?.progress = progress
-                    downLoadLength += bytesWritten
-                    Log.e(
-                        "upLoad---- > ", "progress : " + progress + "，bytesWritten : "
-                                + bytesWritten + "，contentLength : " + contentLength
-                    )
-                }
-                fail { e ->
-                    Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
-                }
-                complete {
-                    Log.i(javaClass.name, "onFinishDownload")
-                    Toast.makeText(this@MainActivity, "onFinishDownload", Toast.LENGTH_SHORT).show()
-                }
-                specifiedTimeout {
-                    Log.i(javaClass.name, "请求超过2s还没有完成")
-                }
-            }
+            )
     }
 }

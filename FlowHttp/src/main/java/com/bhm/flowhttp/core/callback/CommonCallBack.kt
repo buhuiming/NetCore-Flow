@@ -1,6 +1,7 @@
+@file:Suppress("unused")
+
 package com.bhm.flowhttp.core.callback
 
-import io.reactivex.rxjava3.disposables.Disposable
 
 
 /** 事件执行的回调
@@ -8,7 +9,7 @@ import io.reactivex.rxjava3.disposables.Disposable
  */
 open class CommonCallBack<T> : SpecifiedTimeoutCallBack<T>() {
 
-    private var _start: ((disposable: Disposable?) -> Unit)? = null
+    private var _start: (() -> Unit)? = null
 
     private var _success: ((response: T) -> Unit)? = null
 
@@ -16,7 +17,7 @@ open class CommonCallBack<T> : SpecifiedTimeoutCallBack<T>() {
 
     private var _complete: (() -> Unit)? = null
 
-    fun start(value: (disposable: Disposable?) -> Unit) {
+    fun start(value: () -> Unit) {
         _start = value
     }
 
@@ -32,9 +33,9 @@ open class CommonCallBack<T> : SpecifiedTimeoutCallBack<T>() {
         _complete = value
     }
 
-    override fun onStart(disposable: Disposable?, specifiedTimeoutMillis: Long) {
-        super.onStart(disposable, specifiedTimeoutMillis)
-        _start?.invoke(disposable)
+    override fun onStart(specifiedTimeoutMillis: Long) {
+        super.onStart(specifiedTimeoutMillis)
+        _start?.invoke()
     }
 
     override fun onSuccess(response: T) {
