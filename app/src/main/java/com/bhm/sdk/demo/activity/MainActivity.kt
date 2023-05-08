@@ -12,10 +12,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bhm.flowhttp.base.HttpLoadingDialog.Companion.defaultDialog
-import com.bhm.flowhttp.core.HttpBuilder
-import com.bhm.flowhttp.core.RequestManager
-import com.bhm.flowhttp.define.ResultException
+import com.bhm.network.base.HttpLoadingDialog.Companion.defaultDialog
+import com.bhm.network.core.HttpOptions
+import com.bhm.network.core.RequestManager
+import com.bhm.network.define.ResultException
 import com.bhm.netcore.R
 import com.bhm.sdk.demo.adapter.MainUIAdapter
 import com.bhm.sdk.demo.entity.DoGetEntity
@@ -156,14 +156,14 @@ open class MainActivity : FragmentActivity() {
                 .setIsDefaultToast(true, getRxManager())
                 .build();*/
         RequestManager.get()
-            .callManager<DoGetEntity>()
-            .setHttpBuilder(HttpBuilder.create(this)
+            .buildRequest<DoGetEntity>()
+            .setHttpOptions(HttpOptions.create(this)
                 .setLoadingDialog(defaultDialog)
                 .setDialogAttribute(
-                isShowDialog = true,
-                cancelable = true,
-                dialogDismissInterruptRequest = true
-            ).build())//默认使用Application的配置
+                    isShowDialog = true,
+                    cancelable = true,
+                    dialogDismissInterruptRequest = true
+                ).build())//默认使用Application的配置
             .setBaseUrl("http://news-at.zhihu.com")
             .execute(
                 HttpApi::class.java,
@@ -183,7 +183,7 @@ open class MainActivity : FragmentActivity() {
             )
         //或者使用以下方法
 //        lifecycleScope.launch {
-//            val builder = HttpBuilder.getDefaultBuilder(this@MainActivity)
+//            val builder = HttpBuilder.getDefaultHttpOptions(this@MainActivity)
 //            flow<DoGetEntity> {
 //                val api = RetrofitHelper(builder)
 //                    .createRequest(HttpApi::class.java, "http://news-at.zhihu.com")
@@ -201,7 +201,7 @@ open class MainActivity : FragmentActivity() {
     }
 
     private fun doPost() {
-        val httpBuilder = HttpBuilder.create(this)
+        val httpOptions = HttpOptions.create(this)
             .setLoadingDialog(MyHttpLoadingDialog())
             .setDialogAttribute(
                 isShowDialog = true,
@@ -214,8 +214,8 @@ open class MainActivity : FragmentActivity() {
             .setIsDefaultToast(false)
             .build()
         RequestManager.get()
-            .callManager<DoPostEntity>()
-            .setHttpBuilder(httpBuilder)
+            .buildRequest<DoPostEntity>()
+            .setHttpOptions(httpOptions)
             .setBaseUrl("https://www.pgyer.com/")
             .execute(
                 HttpApi::class.java,
@@ -243,7 +243,7 @@ open class MainActivity : FragmentActivity() {
         val file = getFile(this)
         val requestBody: RequestBody = file.asRequestBody("*/*; charset=UTF-8".toMediaTypeOrNull())
         val part: MultipartBody.Part = createFormData("file", file.name, requestBody) //key(file)与服务器一致
-        val builder = HttpBuilder.create(this)
+        val builder = HttpOptions.create(this)
             .setLoadingDialog(defaultDialog)
             .setDialogAttribute(
                 isShowDialog = false,
@@ -254,10 +254,10 @@ open class MainActivity : FragmentActivity() {
             .setIsDefaultToast(true)
             .build()
         uploadJob = RequestManager.get()
-            .callManager<UpLoadEntity>()
-            .setHttpBuilder(builder)
+            .buildRequest<UpLoadEntity>()
+            .setHttpOptions(builder)
             .setBaseUrl("https://upload.pgyer.com/")
-            .uploadEnqueue(
+            .uploadExecute(
                 HttpApi::class.java,
                 {
                     it.upload(
@@ -310,7 +310,7 @@ open class MainActivity : FragmentActivity() {
     private fun downLoadFile() {
         val filePath = getExternalFilesDir("apk")?.path + File.separator
         val fileName = "demo.apk"
-        val builder = HttpBuilder.create(this)
+        val builder = HttpOptions.create(this)
             .setLoadingDialog(defaultDialog)
             .setDialogAttribute(
                 isShowDialog = false,
@@ -323,8 +323,8 @@ open class MainActivity : FragmentActivity() {
             .setIsDefaultToast(true)
             .build()
         downloadJob = RequestManager.get()
-            .callManager<ResponseBody>()
-            .setHttpBuilder(builder)
+            .buildRequest<ResponseBody>()
+            .setHttpOptions(builder)
             .setBaseUrl("http://s.downpp.com/")
             .downloadExecute(
                 HttpApi::class.java,
