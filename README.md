@@ -10,7 +10,7 @@
         }
 
         dependencies {
-            implementation 'com.github.buhuiming:NetCore-Flow:1.0.6-beta'
+            implementation 'com.github.buhuiming:NetCore-Flow:1.0.6-alpha'
         }
 
 #### 1、Application配置默认的全局配置项（可选）
