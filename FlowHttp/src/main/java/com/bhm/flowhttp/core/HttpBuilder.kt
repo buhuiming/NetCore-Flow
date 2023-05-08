@@ -15,11 +15,8 @@ import com.bhm.flowhttp.core.callback.CallBackImp
 import com.bhm.flowhttp.define.*
 import com.bhm.flowhttp.define.CommonUtil.logger
 import com.google.gson.JsonSyntaxException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.HttpException
 import java.util.concurrent.TimeoutException
@@ -41,8 +38,6 @@ class HttpBuilder(private val builder: Builder) {
         get() = builder.dialog
     private val isDefaultToast: Boolean
         get() = builder.isDefaultToast
-    val jobManager: JobManager
-        get() = builder.jobManager
     val readTimeOut: Int
         get() = builder.readTimeOut
     val connectTimeOut: Int
@@ -59,6 +54,8 @@ class HttpBuilder(private val builder: Builder) {
         get() = builder.isDialogDismissInterruptRequest
     val isAppendWrite: Boolean
         get() = builder.isAppendWrite
+    val jobKey: String
+        get() = builder.jobKey
 
     fun writtenLength(): Long {
         return builder.writtenLength
@@ -86,15 +83,9 @@ class HttpBuilder(private val builder: Builder) {
     */
     fun <T: Any, E: Any> enqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
         this.callBack = callBack
-        val job = activity.lifecycleScope.launch {
-            flow<E> {
-                val entity = httpCall(api)
-                if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                    delay(delaysProcessLimitTimeMillis)
-                    doBaseConsumer(callBack, entity)
-                } else {
-                    doBaseConsumer(callBack, entity)
-                }
+        val job = CoroutineScope(Dispatchers.IO).launch {
+            flow {
+                emit(httpCall(api))
             }
                 .catch {
                     logger(this@HttpBuilder, "ThrowableConsumer-> ", it.message) //抛异常
@@ -104,8 +95,8 @@ class HttpBuilder(private val builder: Builder) {
                     } else {
                         doThrowableConsumer(callBack, it)
                     }
+                    JobManager.get().removeJob(builder.jobKey)
                 }
-                .flowOn(Dispatchers.IO)
                 .onStart {
                     callBack?.onStart(specifiedTimeoutMillis)
                 }
@@ -113,10 +104,20 @@ class HttpBuilder(private val builder: Builder) {
                     callBack?.onComplete()
                 }
                 .flowOn(Dispatchers.Main)
-                .collect()
+                .collect {
+                    if (isActive) {
+                        if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
+                            delay(delaysProcessLimitTimeMillis)
+                            doBaseConsumer(callBack, it)
+                        } else {
+                            doBaseConsumer(callBack, it)
+                        }
+                    }
+                    JobManager.get().removeJob(builder.jobKey)
+                }
             currentRequestDateTamp = System.currentTimeMillis()
         }
-        builder.jobManager.add(job)
+        JobManager.get().addJob(builder.jobKey, job)
         return job
     }
 
@@ -132,15 +133,9 @@ class HttpBuilder(private val builder: Builder) {
     */
     fun <T: Any, E: Any> downloadEnqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
         this.callBack = callBack
-        val job = activity.lifecycleScope.launch {
-            flow<E> {
-                val entity = httpCall(api)
-                if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                    delay(delaysProcessLimitTimeMillis)
-                    doBaseConsumer(callBack, entity)
-                } else {
-                    doBaseConsumer(callBack, entity)
-                }
+        val job = CoroutineScope(Dispatchers.IO).launch {
+            flow {
+                emit(httpCall(api))
             }
                 .flowOn(Dispatchers.IO)
                 .catch {
@@ -148,7 +143,7 @@ class HttpBuilder(private val builder: Builder) {
                     if (null != builder.dialog && builder.isShowDialog) {
                         builder.dialog?.dismissLoading(builder.activity)
                     }
-                    builder.jobManager.removeJob()
+                    JobManager.get().removeJob(builder.jobKey)
                 }
                 .onStart {
                     callBack?.onStart(specifiedTimeoutMillis)
@@ -157,55 +152,86 @@ class HttpBuilder(private val builder: Builder) {
                     callBack?.onComplete()
                 }
                 .flowOn(Dispatchers.Main)
-                .collect()
+                .collect {
+                    if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
+                        delay(delaysProcessLimitTimeMillis)
+                        doBaseConsumer(callBack, it)
+                    } else {
+                        doBaseConsumer(callBack, it)
+                    }
+                    JobManager.get().removeJob(builder.jobKey)
+                }
             currentRequestDateTamp = System.currentTimeMillis()
         }
-        builder.jobManager.add(job)
+        JobManager.get().addJob(builder.jobKey, job)
         return job
     }
 
     private fun <E: Any> doBaseConsumer(callBack: CallBackImp<E>?, t: E) {
-        activity.lifecycleScope.launch(Dispatchers.Main) {
-            callBack?.onSuccess(t)
-            if (isShowDialog && null != dialog) {
-                dialog?.dismissLoading(activity)
+        if (builder.isDialogDismissInterruptRequest) {
+            activity.lifecycleScope.launch(Dispatchers.Main) {
+                if (isActive) {
+                    success(callBack, t)
+                }
+            }
+        } else {
+            CoroutineScope(Dispatchers.Main).launch {
+                success(callBack, t)
             }
         }
     }
 
+    private fun <E: Any> success(callBack: CallBackImp<E>?, t: E) {
+        callBack?.onSuccess(t)
+        if (isShowDialog && null != dialog) {
+            dialog?.dismissLoading(activity)
+        }
+    }
+
     private fun <T: Any> doThrowableConsumer(callBack: CallBackImp<T>?, e: Throwable) {
-        activity.lifecycleScope.launch(Dispatchers.Main) {
-            callBack?.onFail(e)
-            if (isShowDialog && null != dialog) {
-                dialog?.dismissLoading(activity)
-            }
-            if (isDefaultToast) {
-                if (e is HttpException) {
-                    if (e.code() == 404) {
-                        Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
-                    } else if (e.code() == 504) {
-                        Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
-                    }
-                } else if (e is IndexOutOfBoundsException
-                    || e is NullPointerException
-                    || e is JsonSyntaxException
-                    || e is IllegalStateException
-                    || e is ResultException
-                ) {
-                    Toast.makeText(activity, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
-                } else if (e is TimeoutException) {
-                    Toast.makeText(activity, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(activity, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
+        if (builder.isDialogDismissInterruptRequest) {
+            activity.lifecycleScope.launch(Dispatchers.Main) {
+                if (isActive) {
+                    fail(callBack, e)
                 }
+            }
+        } else {
+            CoroutineScope(Dispatchers.Main).launch {
+                fail(callBack, e)
+            }
+        }
+    }
+
+    private fun <T: Any> fail(callBack: CallBackImp<T>?, e: Throwable) {
+        callBack?.onFail(e)
+        if (isShowDialog && null != dialog) {
+            dialog?.dismissLoading(activity)
+        }
+        if (isDefaultToast) {
+            if (e is HttpException) {
+                if (e.code() == 404) {
+                    Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
+                } else if (e.code() == 504) {
+                    Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                }
+            } else if (e is IndexOutOfBoundsException
+                || e is NullPointerException
+                || e is JsonSyntaxException
+                || e is IllegalStateException
+                || e is ResultException
+            ) {
+                Toast.makeText(activity, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
+            } else if (e is TimeoutException) {
+                Toast.makeText(activity, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(activity, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     class Builder(val activity: FragmentActivity) {
-        internal var jobManager: JobManager = JobManager()
         internal var isShowDialog = HttpConfig.isShowDialog
         internal var isCancelable = cancelable()
         internal var dialog = httpLoadingDialog
@@ -227,12 +253,20 @@ class HttpBuilder(private val builder: Builder) {
         internal var codeKey = HttpConfig.codeKey
         internal var dataKey = HttpConfig.dataKey
         internal var successCode = HttpConfig.successCode
+        internal var jobKey = System.currentTimeMillis().toString()
 
         init {
             activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
                 override fun onDestroy(owner: LifecycleOwner) {
                     super.onDestroy(owner)
-                    jobManager.clear()
+                    if (isDialogDismissInterruptRequest) {
+                        JobManager.get().removeJob(jobKey)
+                    }
+                    if (activity.isTaskRoot) {
+                        JobManager.get().clear()
+                    }
+                    dialog?.close()
+                    dialog = null
                     activity.lifecycle.removeObserver(this)
                 }
             })

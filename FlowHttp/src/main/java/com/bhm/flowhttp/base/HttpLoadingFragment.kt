@@ -5,6 +5,7 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.TextView
@@ -12,6 +13,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.bhm.flowhttp.R
 import com.bhm.flowhttp.core.HttpBuilder
+import com.bhm.flowhttp.core.JobManager
 import java.util.*
 
 open class HttpLoadingFragment(private val builder: HttpBuilder) : DialogFragment() {
@@ -74,7 +76,7 @@ open class HttpLoadingFragment(private val builder: HttpBuilder) : DialogFragmen
                 ) {
                     if (builder.isCancelable) {
                         if (builder.isDialogDismissInterruptRequest) {
-                            builder.jobManager.removeJob()
+                            JobManager.get().removeJob(builder.jobKey)
                         }
                         dismiss()
                         return@OnKeyListener true
@@ -82,7 +84,7 @@ open class HttpLoadingFragment(private val builder: HttpBuilder) : DialogFragmen
                     if (System.currentTimeMillis() - onBackPressed > 1000) {
                         onBackPressed = System.currentTimeMillis()
                     } else {
-                        builder.jobManager.removeJob()
+                        JobManager.get().removeJob(builder.jobKey)
                         dismiss()
                     }
                 }

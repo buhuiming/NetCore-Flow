@@ -42,7 +42,7 @@ class GsonResponseBodyConverter<T> internal constructor(
             }
             data == null && dataArr == null -> {
                 //这种情况是请求成功，但是json不是合理的
-                throw ResultException(successCode, "json is illegal", response)
+                throw ResultException(successCode, message?: "json is illegal", response)
             }
             else -> {
                 //抛一个自定义ResultException 传入失败时候的状态码，和信息

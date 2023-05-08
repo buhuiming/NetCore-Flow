@@ -120,7 +120,7 @@ class HttpConfig(builder: Builder) {
     companion object {
         @JvmStatic
         var httpLoadingDialog: HttpLoadingDialog? = null
-            private set
+            internal set
         @JvmStatic
         var isShowDialog: Boolean = false
             private set

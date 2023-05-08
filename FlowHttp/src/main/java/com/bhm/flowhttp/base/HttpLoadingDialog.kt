@@ -33,6 +33,11 @@ open class HttpLoadingDialog {
         }
     }
 
+    fun close() {
+        httpLoadingFragment?.dismiss()
+        httpLoadingFragment = null
+    }
+
     open fun initDialog(builder: HttpBuilder): HttpLoadingFragment {
         return HttpLoadingFragment(builder)
     }
@@ -45,8 +50,7 @@ open class HttpLoadingDialog {
         if (null != httpLoadingFragment && !showAgain && null != activity && null != httpLoadingFragment?.dialog && (activity
                     == httpLoadingFragment?.activity)
         ) {
-            httpLoadingFragment?.dismiss()
-            httpLoadingFragment = null
+            close()
         }
         showAgain = false
     }

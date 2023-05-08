@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bhm.flowhttp.base.HttpLoadingDialog.Companion.defaultDialog
 import com.bhm.flowhttp.core.HttpBuilder
 import com.bhm.flowhttp.core.RequestManager
+import com.bhm.flowhttp.define.ResultException
 import com.bhm.netcore.R
 import com.bhm.sdk.demo.adapter.MainUIAdapter
 import com.bhm.sdk.demo.entity.DoGetEntity
@@ -25,6 +26,7 @@ import com.bhm.sdk.demo.tools.MyHttpLoadingDialog
 import com.bhm.sdk.demo.tools.Utils.getFile
 import com.tbruyelle.rxpermissions3.RxPermissions
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.MultipartBody.Part.Companion.createFormData
@@ -93,21 +95,25 @@ open class MainActivity : FragmentActivity() {
             0 -> doGet()
             1 -> doPost()
             2 -> upLoad()
-            3 -> uploadJob?.cancel()
+            3 -> {
+                RequestManager.get().removeJob(uploadJob)
+                uploadJob = null
+            }
             4 -> {
                 downLoadLength = 0
                 progressBarHorizontal?.progress = 0
                 downLoad()
             }
-            5 -> {
-                downloadJob?.cancel()
-            }
+            5 -> RequestManager.get().removeJob(downloadJob)
             6 -> downLoad()
             else -> {}
         }
     }
 
     private fun upLoad() {
+        if (uploadJob != null) {
+            return
+        }
         rxPermissions?.request(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -149,9 +155,15 @@ open class MainActivity : FragmentActivity() {
                 .setIsLogOutPut(true)//默认是false
                 .setIsDefaultToast(true, getRxManager())
                 .build();*/
-        RequestManager.builder()
+        RequestManager.get()
             .callManager<DoGetEntity>()
-            .setHttpBuilder(HttpBuilder.getDefaultBuilder(this))//默认使用Application的配置
+            .setHttpBuilder(HttpBuilder.create(this)
+                .setLoadingDialog(defaultDialog)
+                .setDialogAttribute(
+                isShowDialog = true,
+                cancelable = true,
+                dialogDismissInterruptRequest = true
+            ).build())//默认使用Application的配置
             .setBaseUrl("http://news-at.zhihu.com")
             .execute(
                 HttpApi::class.java,
@@ -161,7 +173,7 @@ open class MainActivity : FragmentActivity() {
                 {
                     //可以继承CommonCallBack，重写方法，比如在onFail中处理401，404等
                     success { response ->
-                        Log.i(javaClass.name, response.date!!)
+                        Log.e(javaClass.name, response.date?: "")
                         Toast.makeText(this@MainActivity, response.date, Toast.LENGTH_SHORT).show()
                     }
                     fail { e ->
@@ -169,6 +181,23 @@ open class MainActivity : FragmentActivity() {
                     }
                 }
             )
+        //或者使用以下方法
+//        lifecycleScope.launch {
+//            val builder = HttpBuilder.getDefaultBuilder(this@MainActivity)
+//            flow<DoGetEntity> {
+//                val api = RetrofitHelper(builder)
+//                    .createRequest(HttpApi::class.java, "http://news-at.zhihu.com")
+//                val response = api.getData("Bearer aedfc1246d0b4c3f046be2d50b34d6ff", "1")
+//                Log.i(javaClass.name, response.date?: "")
+//                Toast.makeText(this@MainActivity, response.date, Toast.LENGTH_SHORT).show()
+//            }.onStart {
+//
+//            }.onCompletion {
+//                builder.dialog?.dismissLoading(this@MainActivity)
+//            }.catch {
+//                Toast.makeText(this@MainActivity, it.message, Toast.LENGTH_SHORT).show()
+//            }.collect()
+//        }
     }
 
     private fun doPost() {
@@ -176,7 +205,7 @@ open class MainActivity : FragmentActivity() {
             .setLoadingDialog(MyHttpLoadingDialog())
             .setDialogAttribute(
                 isShowDialog = true,
-                cancelable = false,
+                cancelable = true,
                 dialogDismissInterruptRequest = false
             )
             .setIsLogOutPut(true)
@@ -184,7 +213,7 @@ open class MainActivity : FragmentActivity() {
             .setSpecifiedTimeoutMillis(500)
             .setIsDefaultToast(false)
             .build()
-        RequestManager.builder()
+        RequestManager.get()
             .callManager<DoPostEntity>()
             .setHttpBuilder(httpBuilder)
             .setBaseUrl("https://www.pgyer.com/")
@@ -224,7 +253,7 @@ open class MainActivity : FragmentActivity() {
             .setIsLogOutPut(true) //默认是false
             .setIsDefaultToast(true)
             .build()
-        uploadJob = RequestManager.builder()
+        uploadJob = RequestManager.get()
             .callManager<UpLoadEntity>()
             .setHttpBuilder(builder)
             .setBaseUrl("https://upload.pgyer.com/")
@@ -252,7 +281,13 @@ open class MainActivity : FragmentActivity() {
                         Toast.makeText(this@MainActivity, response.data?.appCreated, Toast.LENGTH_SHORT).show()
                     }
                     fail { e ->
-                        Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
+                        RequestManager.get().removeJob(uploadJob)
+                        uploadJob = null
+                        if (e != null && e is ResultException) {
+                            Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
+                        }
                     }
                     complete {
                         Log.i(javaClass.name, "onFinishUpload")
@@ -287,7 +322,7 @@ open class MainActivity : FragmentActivity() {
             .setSpecifiedTimeoutMillis(2000)
             .setIsDefaultToast(true)
             .build()
-        downloadJob = RequestManager.builder()
+        downloadJob = RequestManager.get()
             .callManager<ResponseBody>()
             .setHttpBuilder(builder)
             .setBaseUrl("http://s.downpp.com/")
@@ -306,6 +341,8 @@ open class MainActivity : FragmentActivity() {
                         )
                     }
                     fail { e ->
+                        RequestManager.get().removeJob(downloadJob)
+                        downloadJob = null
                         Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
                     }
                     complete {

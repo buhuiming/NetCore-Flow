@@ -19,7 +19,7 @@ class RequestManager private constructor() {
         private var instance: RequestManager = RequestManager()
 
         @JvmStatic
-        fun builder(): RequestManager {
+        fun get(): RequestManager {
             synchronized(RequestManager::class.java) {
                 if (instance == null) {
                     instance = RequestManager()
@@ -27,6 +27,10 @@ class RequestManager private constructor() {
             }
             return instance
         }
+    }
+
+    fun removeJob(job: Job?) {
+        JobManager.get().removeJob(job)
     }
 
     fun <E : Any> callManager(): Manager<E> {
