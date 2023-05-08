@@ -5,7 +5,6 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.TextView

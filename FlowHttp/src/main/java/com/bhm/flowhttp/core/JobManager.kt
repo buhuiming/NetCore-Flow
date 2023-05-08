@@ -3,7 +3,6 @@
 package com.bhm.flowhttp.core
 
 import android.util.Log
-import com.bhm.flowhttp.define.CommonUtil
 import kotlinx.coroutines.Job
 
 /**
