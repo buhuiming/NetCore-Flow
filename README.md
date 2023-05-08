@@ -13,9 +13,7 @@
             implementation 'com.github.buhuiming:NetCore-flow:1.0.6-beta'
         }
 
-#### 1、Activity继承HttpActivity，Fragment继承HttpFragment，DialogFragment继承HttpDialogFragment (实现内存管理)
-
-#### 2、Application配置默认的全局配置项
+#### 1、Application配置默认的全局配置项（可选）
         HttpConfig.create()
             .setLoadingDialog(MyLoadingDialog())
             .setDialogAttribute(
@@ -31,7 +29,7 @@
             .setJsonCovertKey()//设置json解析的Key
             .setOkHttpClient(null)
             .build()
-#### 3、发起请求(参考demo MainActivity)
+#### 2、发起请求(参考demo MainActivity)
         RequestManager.get()
             .callManager<DoGetEntity>()
             .setHttpBuilder(HttpBuilder.getDefaultBuilder(this))//默认使用Application的配置
