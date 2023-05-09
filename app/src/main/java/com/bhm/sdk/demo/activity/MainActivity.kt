@@ -12,11 +12,11 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bhm.netcore.R
 import com.bhm.network.base.HttpLoadingDialog.Companion.defaultDialog
 import com.bhm.network.core.HttpOptions
 import com.bhm.network.core.RequestManager
 import com.bhm.network.define.ResultException
-import com.bhm.netcore.R
 import com.bhm.sdk.demo.adapter.MainUIAdapter
 import com.bhm.sdk.demo.entity.DoGetEntity
 import com.bhm.sdk.demo.entity.DoPostEntity
@@ -147,7 +147,7 @@ open class MainActivity : FragmentActivity() {
 
     private fun doGet() {
         /*单独使用配置*/
-        /*HttpBuilder builder = HttpBuilder.create(this)
+        /*httpOptions builder = httpOptions.create(this)
                 .setLoadingDialog(RxLoadingDialog.getDefaultDialog())
 //                .setLoadingDialog(new MyLoadingDialog())
                 .setDialogAttribute(true, false, false)
@@ -183,7 +183,7 @@ open class MainActivity : FragmentActivity() {
             )
         //或者使用以下方法
 //        lifecycleScope.launch {
-//            val builder = HttpBuilder.getDefaultHttpOptions(this@MainActivity)
+//            val builder = HttpOptions.getDefaultHttpOptions(this@MainActivity)
 //            flow<DoGetEntity> {
 //                val api = RetrofitHelper(builder)
 //                    .createRequest(HttpApi::class.java, "http://news-at.zhihu.com")

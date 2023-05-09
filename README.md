@@ -10,7 +10,7 @@
         }
 
         dependencies {
-            implementation 'com.github.buhuiming:NetCore-Flow:1.1.0-alpha'
+            implementation 'com.github.buhuiming:NetCore-Flow:1.1.1-alpha'
         }
 
 #### 1、Application配置默认的全局配置项（可选）
@@ -31,7 +31,7 @@
 #### 2、发起请求(参考demo MainActivity)
         RequestManager.get()
             .buildRequest<DoGetEntity>()
-            .setHttpOptions(HttpBuilder.getDefaultHttpOptions(this))//默认使用Application的配置
+            .setHttpOptions(httpOptions.getDefaultHttpOptions(this))//默认使用Application的配置
             .setBaseUrl("http://news-at.zhihu.com")
             .execute(
                 HttpApi::class.java,
@@ -51,7 +51,7 @@
 
         或者
         lifecycleScope.launch {
-            val builder = HttpBuilder.getDefaultHttpOptions(this@MainActivity)
+            val builder = httpOptions.getDefaultHttpOptions(this@MainActivity)
             flow<DoGetEntity> {
                 val api = RetrofitHelper(builder)
                     .createRequest(HttpApi::class.java, "http://news-at.zhihu.com")

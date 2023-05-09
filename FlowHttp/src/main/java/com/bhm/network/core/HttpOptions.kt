@@ -2,41 +2,34 @@
 
 package com.bhm.network.core
 
-import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.bhm.network.base.HttpLoadingDialog
 import com.bhm.network.core.HttpConfig.Companion.cancelable
 import com.bhm.network.core.HttpConfig.Companion.httpLoadingDialog
 import com.bhm.network.core.HttpConfig.Companion.writtenLength
 import com.bhm.network.core.callback.CallBackImp
 import com.bhm.network.define.*
-import com.bhm.network.define.CommonUtil.logger
-import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import okhttp3.OkHttpClient
-import retrofit2.HttpException
-import java.util.concurrent.TimeoutException
 
 /**
  * Created by bhm on 2023/5/6.
  */
 class HttpOptions(private val builder: Builder) {
-    private var currentRequestDateTamp: Long = 0
+    var currentRequestDateTamp: Long = 0
     val activity: FragmentActivity
         get() = builder.activity
     var callBack: CallBackImp<*>? = null
-        private set
     val isShowDialog: Boolean
         get() = builder.isShowDialog
     val isLogOutPut: Boolean
         get() = builder.isLogOutPut
     val dialog: HttpLoadingDialog?
         get() = builder.dialog
-    private val isDefaultToast: Boolean
+    val isDefaultToast: Boolean
         get() = builder.isDefaultToast
     val readTimeOut: Int
         get() = builder.readTimeOut
@@ -65,9 +58,9 @@ class HttpOptions(private val builder: Builder) {
         get() = builder.loadingTitle
     val defaultHeader: HashMap<String, String>?
         get() = builder.defaultHeader
-    private val delaysProcessLimitTimeMillis: Long
+    val delaysProcessLimitTimeMillis: Long
         get() = builder.delaysProcessLimitTimeMillis
-    private val specifiedTimeoutMillis: Long
+    val specifiedTimeoutMillis: Long
         get() = builder.specifiedTimeoutMillis
     val messageKey: String
         get() = builder.messageKey
@@ -77,159 +70,6 @@ class HttpOptions(private val builder: Builder) {
         get() = builder.dataKey
     val successCode: Int
         get() = builder.successCode
-
-    /*
-    *  设置请求回调
-    */
-    fun <T: Any, E: Any> enqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
-        this.callBack = callBack
-        val job = CoroutineScope(Dispatchers.IO).launch {
-            flow {
-                emit(httpCall(api))
-            }
-                .catch {
-                    logger(this@HttpOptions, "ThrowableConsumer-> ", it.message) //抛异常
-                    if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                        delay(delaysProcessLimitTimeMillis)
-                        doThrowableConsumer(callBack, it)
-                    } else {
-                        doThrowableConsumer(callBack, it)
-                    }
-                    JobManager.get().removeJob(builder.jobKey)
-                }
-                .onStart {
-                    callBack?.onStart(specifiedTimeoutMillis)
-                }
-                .onCompletion {
-                    callBack?.onComplete()
-                }
-                .flowOn(Dispatchers.Main)
-                .collect {
-                    if (isActive) {
-                        if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                            delay(delaysProcessLimitTimeMillis)
-                            doBaseConsumer(callBack, it)
-                        } else {
-                            doBaseConsumer(callBack, it)
-                        }
-                    }
-                    JobManager.get().removeJob(builder.jobKey)
-                }
-            currentRequestDateTamp = System.currentTimeMillis()
-        }
-        JobManager.get().addJob(builder.jobKey, job)
-        return job
-    }
-
-    /*
-    *  设置上传文件回调
-    */
-    fun <T: Any, E: Any> uploadEnqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
-        return this.enqueue(api, httpCall, callBack)
-    }
-
-    /*
-    *  设置文件下载回调
-    */
-    fun <T: Any, E: Any> downloadEnqueue(api: T, httpCall: suspend (T) -> E, callBack: CallBackImp<E>?): Job {
-        this.callBack = callBack
-        val job = CoroutineScope(Dispatchers.IO).launch {
-            flow {
-                emit(httpCall(api))
-            }
-                .flowOn(Dispatchers.IO)
-                .catch {
-                    callBack?.onFail(it)
-                    if (null != builder.dialog && builder.isShowDialog) {
-                        builder.dialog?.dismissLoading(builder.activity)
-                    }
-                    JobManager.get().removeJob(builder.jobKey)
-                }
-                .onStart {
-                    callBack?.onStart(specifiedTimeoutMillis)
-                }
-                .onCompletion {
-                    callBack?.onComplete()
-                }
-                .flowOn(Dispatchers.Main)
-                .collect {
-                    if (System.currentTimeMillis() - currentRequestDateTamp <= delaysProcessLimitTimeMillis) {
-                        delay(delaysProcessLimitTimeMillis)
-                        doBaseConsumer(callBack, it)
-                    } else {
-                        doBaseConsumer(callBack, it)
-                    }
-                    JobManager.get().removeJob(builder.jobKey)
-                }
-            currentRequestDateTamp = System.currentTimeMillis()
-        }
-        JobManager.get().addJob(builder.jobKey, job)
-        return job
-    }
-
-    private fun <E: Any> doBaseConsumer(callBack: CallBackImp<E>?, t: E) {
-        if (builder.isDialogDismissInterruptRequest) {
-            activity.lifecycleScope.launch(Dispatchers.Main) {
-                if (isActive) {
-                    success(callBack, t)
-                }
-            }
-        } else {
-            CoroutineScope(Dispatchers.Main).launch {
-                success(callBack, t)
-            }
-        }
-    }
-
-    private fun <E: Any> success(callBack: CallBackImp<E>?, t: E) {
-        callBack?.onSuccess(t)
-        if (isShowDialog && null != dialog) {
-            dialog?.dismissLoading(activity)
-        }
-    }
-
-    private fun <T: Any> doThrowableConsumer(callBack: CallBackImp<T>?, e: Throwable) {
-        if (builder.isDialogDismissInterruptRequest) {
-            activity.lifecycleScope.launch(Dispatchers.Main) {
-                if (isActive) {
-                    fail(callBack, e)
-                }
-            }
-        } else {
-            CoroutineScope(Dispatchers.Main).launch {
-                fail(callBack, e)
-            }
-        }
-    }
-
-    private fun <T: Any> fail(callBack: CallBackImp<T>?, e: Throwable) {
-        callBack?.onFail(e)
-        if (isShowDialog && null != dialog) {
-            dialog?.dismissLoading(activity)
-        }
-        if (isDefaultToast) {
-            if (e is HttpException) {
-                if (e.code() == 404) {
-                    Toast.makeText(activity, e.message, Toast.LENGTH_SHORT).show()
-                } else if (e.code() == 504) {
-                    Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
-                }
-            } else if (e is IndexOutOfBoundsException
-                || e is NullPointerException
-                || e is JsonSyntaxException
-                || e is IllegalStateException
-                || e is ResultException
-            ) {
-                Toast.makeText(activity, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
-            } else if (e is TimeoutException) {
-                Toast.makeText(activity, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(activity, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     class Builder(val activity: FragmentActivity) {
         internal var isShowDialog = HttpConfig.isShowDialog
