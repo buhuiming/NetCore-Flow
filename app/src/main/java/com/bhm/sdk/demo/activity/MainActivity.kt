@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bhm.netcore.R
-import com.bhm.network.base.HttpLoadingDialog.Companion.defaultDialog
+import com.bhm.network.base.HttpLoadingDialog
 import com.bhm.network.core.HttpOptions
 import com.bhm.network.core.RequestManager
 import com.bhm.network.define.ResultException
@@ -148,7 +148,7 @@ open class MainActivity : FragmentActivity() {
     private fun doGet() {
         /*单独使用配置*/
         /*httpOptions builder = httpOptions.create(this)
-                .setLoadingDialog(RxLoadingDialog.getDefaultDialog())
+                .setLoadingDialog(HttpLoadingDialog())
 //                .setLoadingDialog(new MyLoadingDialog())
                 .setDialogAttribute(true, false, false)
                 .setHttpTimeOut(20000, 20000)
@@ -158,7 +158,7 @@ open class MainActivity : FragmentActivity() {
         RequestManager.get()
             .buildRequest<DoGetEntity>()
             .setHttpOptions(HttpOptions.create(this)
-                .setLoadingDialog(defaultDialog)
+                .setLoadingDialog(HttpLoadingDialog())
                 .setDialogAttribute(
                     isShowDialog = true,
                     cancelable = true,
@@ -244,7 +244,7 @@ open class MainActivity : FragmentActivity() {
         val requestBody: RequestBody = file.asRequestBody("*/*; charset=UTF-8".toMediaTypeOrNull())
         val part: MultipartBody.Part = createFormData("file", file.name, requestBody) //key(file)与服务器一致
         val builder = HttpOptions.create(this)
-            .setLoadingDialog(defaultDialog)
+            .setLoadingDialog(HttpLoadingDialog())
             .setDialogAttribute(
                 isShowDialog = false,
                 cancelable = false,
@@ -279,6 +279,7 @@ open class MainActivity : FragmentActivity() {
                     success { response ->
                         Log.i(javaClass.name, response.data?.appCreated?: "")
                         Toast.makeText(this@MainActivity, response.data?.appCreated, Toast.LENGTH_SHORT).show()
+                        uploadJob = null
                     }
                     fail { e ->
                         RequestManager.get().removeJob(uploadJob)
@@ -311,7 +312,7 @@ open class MainActivity : FragmentActivity() {
         val filePath = getExternalFilesDir("apk")?.path + File.separator
         val fileName = "demo.apk"
         val builder = HttpOptions.create(this)
-            .setLoadingDialog(defaultDialog)
+            .setLoadingDialog(HttpLoadingDialog())
             .setDialogAttribute(
                 isShowDialog = false,
                 cancelable = false,

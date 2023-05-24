@@ -19,6 +19,8 @@ open class HttpLoadingFragment(private val builder: HttpOptions) : DialogFragmen
 
     private var textView: TextView? = null
 
+    private var cancelDialogEvent: (() -> Unit)? = null
+
     override fun show(manager: FragmentManager, tag: String?) {
         try {
             //在每个add事务前增加一个remove事务，防止连续的add
@@ -28,6 +30,10 @@ open class HttpLoadingFragment(private val builder: HttpOptions) : DialogFragmen
             //同一实例使用不同的tag会异常,这里捕获一下
             e.printStackTrace()
         }
+    }
+
+    fun setCancelDialogEvent(cancelDialogEvent: (() -> Unit)) {
+        this.cancelDialogEvent = cancelDialogEvent
     }
 
     /**
@@ -77,14 +83,14 @@ open class HttpLoadingFragment(private val builder: HttpOptions) : DialogFragmen
                         if (builder.isDialogDismissInterruptRequest) {
                             JobManager.get().removeJob(builder.jobKey)
                         }
-                        dismiss()
+                        cancelDialogEvent?.invoke()
                         return@OnKeyListener true
                     }
                     if (System.currentTimeMillis() - onBackPressed > 1000) {
                         onBackPressed = System.currentTimeMillis()
                     } else {
                         JobManager.get().removeJob(builder.jobKey)
-                        dismiss()
+                        cancelDialogEvent?.invoke()
                     }
                 }
                 true
