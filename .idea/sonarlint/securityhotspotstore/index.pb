@@ -45,3 +45,5 @@ p
 @FlowHttp/src/main/java/com/bhm/network/define/ResultException.kt,b\2\b290078981437563311cd3853db3ab8b0904b233
 E
 FlowHttp/build.gradle,0\c\0cde15c72e8b33df48036f4de70b876324ec5dc9
+w
+GFlowHttp/src/main/java/com/bhm/network/core/GsonRequestBodyConverter.kt,3\d\3dc8921b06cf2bdf2c18e16e07f92f482aff756c

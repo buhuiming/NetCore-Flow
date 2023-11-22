@@ -163,3 +163,5 @@ k
 ;app/src/main/java/com/bhm/sdk/demo/entity/LoginResEntity.kt,3\3\33b66e0837e4c44dcae939942c33a500d0e1829a
 k
 ;app/src/main/java/com/bhm/sdk/demo/entity/LoginReqEntity.kt,2\f\2f4f918eb68152bba7c5b665aefba7abe434e7a8
+w
+GFlowHttp/src/main/java/com/bhm/network/core/GsonRequestBodyConverter.kt,3\d\3dc8921b06cf2bdf2c18e16e07f92f482aff756c

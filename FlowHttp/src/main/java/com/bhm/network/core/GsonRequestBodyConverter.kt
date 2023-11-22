@@ -3,7 +3,7 @@
  * 不能修改和删除上面的版权声明
  * 此代码属于buhuiming编写，在未经允许的情况下不得传播复制
  */
-package com.bhm.network
+package com.bhm.network.core
 
 import com.google.gson.Gson
 import com.google.gson.TypeAdapter

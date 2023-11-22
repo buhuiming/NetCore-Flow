@@ -1,6 +1,5 @@
 package com.bhm.network.core
 
-import com.bhm.network.GsonRequestBodyConverter
 import com.bhm.network.define.CODE_KEY
 import com.bhm.network.define.DATA_KEY
 import com.bhm.network.define.MESSAGE_KEY
