@@ -24,7 +24,8 @@ class RetrofitHelper(private val builder: HttpOptions) {
                 builder.messageKey,
                 builder.codeKey,
                 builder.dataKey,
-                builder.successCode)
+                builder.successCode,
+                builder.parseDataKey)
             )
             .build()
         return retrofit.create(clazz)

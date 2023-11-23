@@ -70,6 +70,8 @@ class HttpOptions(private val builder: Builder) {
         get() = builder.dataKey
     val successCode: Int
         get() = builder.successCode
+    val parseDataKey: Boolean
+        get() = builder.parseDataKey
 
     class Builder(val activity: FragmentActivity) {
         internal var isShowDialog = HttpConfig.isShowDialog
@@ -93,6 +95,7 @@ class HttpOptions(private val builder: Builder) {
         internal var codeKey = HttpConfig.codeKey
         internal var dataKey = HttpConfig.dataKey
         internal var successCode = HttpConfig.successCode
+        internal var parseDataKey = HttpConfig.parseDataKey
         internal var jobKey = System.currentTimeMillis().toString()
 
         init {
@@ -222,15 +225,18 @@ class HttpOptions(private val builder: Builder) {
          * @param codeKey 返回码字段名
          * @param dataKey 数据字段名
          * @param successCode 成功时的状态码值，默认[OK_CODE]
+         * @param parseDataKey 解析整个Json还是解析dataKey部分，默认false
          */
         fun setJsonCovertKey(messageKey: String = MESSAGE_KEY,
                              codeKey: String = CODE_KEY,
                              dataKey: String = DATA_KEY,
-                             successCode: Int = OK_CODE) = apply {
+                             successCode: Int = OK_CODE,
+                             parseDataKey: Boolean = false) = apply {
             this.messageKey = messageKey
             this.codeKey = codeKey
             this.dataKey = dataKey
             this.successCode = successCode
+            this.parseDataKey = parseDataKey
         }
 
         fun build(): HttpOptions {

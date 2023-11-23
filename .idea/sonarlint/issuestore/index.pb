@@ -59,8 +59,6 @@ i
 app/build.gradle,f\4\f4a01d6a4fcb971362ec00a83903fd3902f52164
 m
 =FlowHttp/src/main/java/com/bhm/network/core/RequestManager.kt,6\5\65dbe50fb9abd4cf71b4f30ce47d4a3ab8c774cf
-w
-GFlowHttp/src/main/java/com/bhm/network/core/ResponseConverterFactory.kt,1\3\13c7b303cf9bdc11e02bb58de1d692a4f9297242
 m
 =FlowHttp/src/main/java/com/bhm/network/core/RetrofitHelper.kt,f\1\f17ad8355da065c5629c7ad3940b349fb049b577
 s
@@ -155,13 +153,7 @@ r
 BFlowHttp/src/main/java/com/bhm/network/base/HttpLoadingFragment.kt,8\b\8ba33c2c21a8e8369735240c568ac94fc7d482e1
 k
 ;app/src/main/java/com/bhm/sdk/demo/activity/MainActivity.kt,5\9\59ca5d84a1197004f62a9cb9f53a7df61157ac7a
-r
-BFlowHttp/src/main/java/com/bhm/network/GsonRequestBodyConverter.kt,1\9\19d7559087fa5c7bd86eb5812f64fa5e5755004e
 v
 FFlowHttp/src/main/java/com/bhm/network/core/NetCoreConverterFactory.kt,b\4\b4eef039ecfeb4c95ea6fe2ab9f3cb52d4e330f6
-k
-;app/src/main/java/com/bhm/sdk/demo/entity/LoginResEntity.kt,3\3\33b66e0837e4c44dcae939942c33a500d0e1829a
-k
-;app/src/main/java/com/bhm/sdk/demo/entity/LoginReqEntity.kt,2\f\2f4f918eb68152bba7c5b665aefba7abe434e7a8
 w
 GFlowHttp/src/main/java/com/bhm/network/core/GsonRequestBodyConverter.kt,3\d\3dc8921b06cf2bdf2c18e16e07f92f482aff756c
