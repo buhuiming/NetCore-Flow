@@ -4,7 +4,7 @@ package com.bhm.network.core.callback
 /** 事件执行的回调
  * Created by bhm on 2023/5/6.
  */
-open class UploadCallBack<T>(override var code: Int) : ProgressCallBack<T>() {
+open class UploadCallBack<T>() : ProgressCallBack<T>() {
 
     private var _start: (() -> Unit)? = null
 
@@ -15,6 +15,8 @@ open class UploadCallBack<T>(override var code: Int) : ProgressCallBack<T>() {
     private var _fail: ((e: Throwable?) -> Unit)? = null
 
     private var _complete: (() -> Unit)? = null
+
+    override var code: Int = 0
 
     fun start(value: () -> Unit) {
         _start = value

@@ -174,10 +174,10 @@ open class MainActivity : FragmentActivity() {
                     //可以继承CommonCallBack，重写方法，比如在onFail中处理401，404等
                     success { response ->
                         Log.e(javaClass.name, response.date?: "")
-                        Toast.makeText(this@MainActivity, response.date, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, response.date + code, Toast.LENGTH_SHORT).show()
                     }
                     fail { e ->
-                        Toast.makeText(this@MainActivity, e?.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, e?.message + code, Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -225,7 +225,7 @@ open class MainActivity : FragmentActivity() {
                 {
                     success { response ->
                         Log.i(javaClass.name, response.toString())
-                        Toast.makeText(this@MainActivity, response.data?.key, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, response.data?.key + code, Toast.LENGTH_SHORT).show()
                     }
                     fail { e ->
                         AlertDialog.Builder(this@MainActivity)
@@ -233,7 +233,7 @@ open class MainActivity : FragmentActivity() {
                             .setNegativeButton("确定") { dialog, _ -> dialog.dismiss() }.show()
                     }
                     specifiedTimeout {
-                        Log.i(javaClass.name, "请求超过0.5s还没有完成")
+                        Log.i(javaClass.name, "请求超过0.5s还没有完成${code}")
                     }
                 }
             )
