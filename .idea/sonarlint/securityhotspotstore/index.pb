@@ -43,3 +43,13 @@ v
 FFlowHttp/src/main/java/com/bhm/network/core/callback/CommonCallBack.kt,6\f\6f017415c93d2e825fed286429f54b3099c01dd8
 ?
 settings.gradle,0\5\05efc8b1657769a27696d478ded1e95f38737233
+s
+CFlowHttp/src/main/java/com/bhm/network/core/callback/CallBackImp.kt,e\3\e3af95a2b8cd55e36401481792baf4c612492eb4
+€
+PFlowHttp/src/main/java/com/bhm/network/core/callback/SpecifiedTimeoutCallBack.kt,f\4\f4715a7ba6103bad5a820aa31ecd8d670ad925fa
+v
+FFlowHttp/src/main/java/com/bhm/network/core/callback/UploadCallBack.kt,b\4\b48465e3b1c67a9f0062c3293e49370dff0f840d
+x
+HFlowHttp/src/main/java/com/bhm/network/core/callback/ProgressCallBack.kt,0\3\03d0b5bed937608d1d1715cd5138b4bd268b6464
+x
+HFlowHttp/src/main/java/com/bhm/network/core/callback/DownloadCallBack.kt,9\9\995062e492dd75d50b39782d3b129b26966361b1

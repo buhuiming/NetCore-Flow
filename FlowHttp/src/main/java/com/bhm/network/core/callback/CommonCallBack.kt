@@ -7,7 +7,7 @@ package com.bhm.network.core.callback
 /** 事件执行的回调
  * Created by bhm on 2023/5/6.
  */
-open class CommonCallBack<T> : SpecifiedTimeoutCallBack<T>() {
+open class CommonCallBack<T>(override var code: Int) : SpecifiedTimeoutCallBack<T>() {
 
     private var _start: (() -> Unit)? = null
 
