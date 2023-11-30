@@ -173,8 +173,8 @@ open class MainActivity : FragmentActivity() {
                 {
                     //可以继承CommonCallBack，重写方法，比如在onFail中处理401，404等
                     success { response ->
-                        Log.e(javaClass.name, response?.date?: "")
-                        Toast.makeText(this@MainActivity, response?.date + code, Toast.LENGTH_SHORT).show()
+                        Log.e(javaClass.name, response.date?: "")
+                        Toast.makeText(this@MainActivity, response.date + code, Toast.LENGTH_SHORT).show()
                     }
                     fail { e ->
                         Toast.makeText(this@MainActivity, e?.message + code, Toast.LENGTH_SHORT).show()
@@ -225,7 +225,7 @@ open class MainActivity : FragmentActivity() {
                 {
                     success { response ->
                         Log.i(javaClass.name, response.toString())
-                        Toast.makeText(this@MainActivity, response?.data?.key + code, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, response.data?.key + code, Toast.LENGTH_SHORT).show()
                     }
                     fail { e ->
                         AlertDialog.Builder(this@MainActivity)
@@ -277,8 +277,8 @@ open class MainActivity : FragmentActivity() {
                         )
                     }
                     success { response ->
-                        Log.i(javaClass.name, response?.data?.appCreated?: "")
-                        Toast.makeText(this@MainActivity, response?.data?.appCreated, Toast.LENGTH_SHORT).show()
+                        Log.i(javaClass.name, response.data?.appCreated?: "")
+                        Toast.makeText(this@MainActivity, response.data?.appCreated, Toast.LENGTH_SHORT).show()
                         uploadJob = null
                     }
                     fail { e ->
