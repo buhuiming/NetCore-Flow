@@ -10,7 +10,7 @@ open class UploadCallBack<T>() : ProgressCallBack<T>() {
 
     private var _progress: ((progress: Int, bytesWritten: Long, contentLength: Long) -> Unit)? = null
 
-    private var _success: ((response: T) -> Unit)? = null
+    private var _success: ((response: T?) -> Unit)? = null
 
     private var _fail: ((e: Throwable?) -> Unit)? = null
 
@@ -26,7 +26,7 @@ open class UploadCallBack<T>() : ProgressCallBack<T>() {
         _progress = value
     }
 
-    fun success(value: (response: T) -> Unit) {
+    fun success(value: (response: T?) -> Unit) {
         _success = value
     }
 
@@ -47,7 +47,7 @@ open class UploadCallBack<T>() : ProgressCallBack<T>() {
         _progress?.invoke(progress, bytesWritten, contentLength)
     }
 
-    override fun onSuccess(response: T) {
+    override fun onSuccess(response: T?) {
         _success?.invoke(response)
     }
 

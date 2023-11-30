@@ -13,7 +13,7 @@ open class DownloadCallBack() : ProgressCallBack<Any>() {
 
     private var _progress: ((progress: Int, bytesWritten: Long, contentLength: Long) -> Unit)? = null
 
-    private var _success: ((response: Any) -> Unit)? = null
+    private var _success: ((response: Any?) -> Unit)? = null
 
     private var _fail: ((e: Throwable?) -> Unit)? = null
 
@@ -29,7 +29,7 @@ open class DownloadCallBack() : ProgressCallBack<Any>() {
         _progress = value
     }
 
-    fun success(value: (response: Any) -> Unit) {
+    fun success(value: (response: Any?) -> Unit) {
         _success = value
     }
 
@@ -50,7 +50,7 @@ open class DownloadCallBack() : ProgressCallBack<Any>() {
         _progress?.invoke(progress, bytesWritten, contentLength)
     }
 
-    override fun onSuccess(response: Any) {
+    override fun onSuccess(response: Any?) {
         _success?.invoke(response)
     }
 

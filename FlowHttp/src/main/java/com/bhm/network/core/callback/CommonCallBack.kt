@@ -11,7 +11,7 @@ open class CommonCallBack<T>() : SpecifiedTimeoutCallBack<T>() {
 
     private var _start: (() -> Unit)? = null
 
-    private var _success: ((response: T) -> Unit)? = null
+    private var _success: ((response: T?) -> Unit)? = null
 
     private var _fail: ((e: Throwable?) -> Unit)? = null
 
@@ -23,7 +23,7 @@ open class CommonCallBack<T>() : SpecifiedTimeoutCallBack<T>() {
         _start = value
     }
 
-    fun success(value: (response: T) -> Unit) {
+    fun success(value: (response: T?) -> Unit) {
         _success = value
     }
 
@@ -40,7 +40,7 @@ open class CommonCallBack<T>() : SpecifiedTimeoutCallBack<T>() {
         _start?.invoke()
     }
 
-    override fun onSuccess(response: T) {
+    override fun onSuccess(response: T?) {
         _success?.invoke(response)
     }
 
