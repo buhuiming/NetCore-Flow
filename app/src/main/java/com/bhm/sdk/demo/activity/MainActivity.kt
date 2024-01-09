@@ -209,6 +209,7 @@ open class MainActivity : FragmentActivity() {
                 dialogDismissInterruptRequest = false
             )
             .setIsLogOutPut(true)
+            .setDelaysProcessLimitTimeMillis(3000)
             .setJsonCovertKey(successCode = 0)
             .setSpecifiedTimeoutMillis(500)
             .setIsDefaultToast(false)

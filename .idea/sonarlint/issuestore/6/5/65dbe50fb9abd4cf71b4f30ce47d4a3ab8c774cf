@@ -1,3 +1,3 @@
 
-kotlin:S6532j"`Replace this if expression with requireNotNull(httpOptions) { "Please initialize HttpOptions" }.(ÀÂ€‡8¦Šò±¿1
-]kotlin:S6511õ"=Merge chained "if" statements into a single "when" statement.(«ÐŽú8°Šò±¿1
+<kotlin:S6310Ì"Avoid hardcoded dispatchers.(¨¨Ø‡8Ç½ÐêÎ1
+<kotlin:S6310á"Avoid hardcoded dispatchers.(¨¨Ø‡8Ç½ÐêÎ1

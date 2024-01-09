@@ -43,7 +43,7 @@ internal class JobManager private constructor() {
      * 取消一个请求
      */
     fun removeJob(key: String) { //中断监听 取消请求
-        if (jobMap.size > 0) {
+        if (jobMap.isNotEmpty()) {
             val job = jobMap[key]
             jobMap.remove(key)
             job?.cancel()
