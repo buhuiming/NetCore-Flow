@@ -122,8 +122,9 @@ class RequestManager private constructor() {
                             "ThrowableConsumer-> ",
                             it.message
                         ) //抛异常
-                        if (System.currentTimeMillis() - httpOptions.currentRequestDateTamp <= httpOptions.delaysProcessLimitTimeMillis) {
-                            delay(httpOptions.delaysProcessLimitTimeMillis)
+                        val requestSpentTime = System.currentTimeMillis() - httpOptions.currentRequestDateTamp
+                        if (requestSpentTime < httpOptions.delaysProcessLimitTimeMillis) {
+                            delay(httpOptions.delaysProcessLimitTimeMillis - requestSpentTime)
                             doThrowableConsumer(callBack, it)
                         } else {
                             doThrowableConsumer(callBack, it)
@@ -139,8 +140,9 @@ class RequestManager private constructor() {
                     .flowOn(Dispatchers.Main)
                     .collect {
                         if (isActive) {
-                            if (System.currentTimeMillis() - httpOptions.currentRequestDateTamp <= httpOptions.delaysProcessLimitTimeMillis) {
-                                delay(httpOptions.delaysProcessLimitTimeMillis)
+                            val requestSpentTime = System.currentTimeMillis() - httpOptions.currentRequestDateTamp
+                            if (requestSpentTime < httpOptions.delaysProcessLimitTimeMillis) {
+                                delay(httpOptions.delaysProcessLimitTimeMillis - requestSpentTime)
                                 doBaseConsumer(callBack, it)
                             } else {
                                 doBaseConsumer(callBack, it)
@@ -186,8 +188,9 @@ class RequestManager private constructor() {
                     }
                     .flowOn(Dispatchers.Main)
                     .collect {
-                        if (System.currentTimeMillis() - httpOptions.currentRequestDateTamp <= httpOptions.delaysProcessLimitTimeMillis) {
-                            delay(httpOptions.delaysProcessLimitTimeMillis)
+                        val requestSpentTime = System.currentTimeMillis() - httpOptions.currentRequestDateTamp
+                        if (requestSpentTime < httpOptions.delaysProcessLimitTimeMillis) {
+                            delay(httpOptions.delaysProcessLimitTimeMillis - requestSpentTime)
                             doBaseConsumer(callBack, it)
                         } else {
                             doBaseConsumer(callBack, it)
