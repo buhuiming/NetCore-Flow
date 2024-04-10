@@ -72,6 +72,8 @@ class HttpOptions(private val builder: Builder) {
         get() = builder.successCode
     val parseDataKey: Boolean
         get() = builder.parseDataKey
+    val noProxy: Boolean
+        get() = builder.noProxy
 
     class Builder(val activity: FragmentActivity) {
         internal var isShowDialog = HttpConfig.isShowDialog
@@ -97,6 +99,7 @@ class HttpOptions(private val builder: Builder) {
         internal var successCode = HttpConfig.successCode
         internal var parseDataKey = HttpConfig.parseDataKey
         internal var jobKey = System.currentTimeMillis().toString()
+        internal var noProxy = true
 
         init {
             activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -153,6 +156,13 @@ class HttpOptions(private val builder: Builder) {
         fun setHttpTimeOut(readTimeOut: Int, connectTimeOut: Int) = apply {
             this.readTimeOut = readTimeOut
             this.connectTimeOut = connectTimeOut
+        }
+
+        /**
+         * 设置应用层是否可以抓包
+         */
+        fun setNoProxy(noProxy: Boolean) = apply {
+            this.noProxy = noProxy
         }
 
         /** 不推荐使用，使用此方法，将取消默认的设置，包括但不限于日志，缓存，下载，上传，网络，SSL。
