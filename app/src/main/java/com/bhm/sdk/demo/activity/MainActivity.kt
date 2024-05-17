@@ -16,6 +16,8 @@ import com.bhm.netcore.R
 import com.bhm.network.base.HttpLoadingDialog
 import com.bhm.network.core.HttpOptions
 import com.bhm.network.core.RequestManager
+import com.bhm.network.core.callback.HttpLogEvent
+import com.bhm.network.define.HttpLogLevel
 import com.bhm.network.define.ResultException
 import com.bhm.sdk.demo.adapter.MainUIAdapter
 import com.bhm.sdk.demo.entity.DoGetEntity
@@ -159,6 +161,13 @@ open class MainActivity : FragmentActivity() {
             .buildRequest<DoGetEntity>()
             .setHttpOptions(HttpOptions.create(this)
                 .setLoadingDialog(HttpLoadingDialog())
+                .setIsLogOutPut(false)
+                .setHttpLogEvent(object : HttpLogEvent {
+                    override fun onLog(level: HttpLogLevel, tag: String, message: String?) {
+                        Log.e(tag, ("自定义输出日志：$message"))
+                    }
+
+                })
                 .setDialogAttribute(
                     isShowDialog = true,
                     cancelable = true,

@@ -261,7 +261,9 @@ class HttpOptions(private val builder: Builder) {
         }
 
         fun build(): HttpOptions {
-            return HttpOptions(this)
+            val options = HttpOptions(this)
+            JobManager.get().setHttpOptions(options)
+            return options
         }
     }
 
