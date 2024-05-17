@@ -10,6 +10,7 @@ import com.bhm.network.core.HttpConfig.Companion.cancelable
 import com.bhm.network.core.HttpConfig.Companion.httpLoadingDialog
 import com.bhm.network.core.HttpConfig.Companion.writtenLength
 import com.bhm.network.core.callback.CallBackImp
+import com.bhm.network.core.callback.HttpLogEvent
 import com.bhm.network.define.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -74,6 +75,8 @@ class HttpOptions(private val builder: Builder) {
         get() = builder.parseDataKey
     val noProxy: Boolean
         get() = builder.noProxy
+    val httpLogEvent: HttpLogEvent?
+        get() = builder.httpLogEvent
 
     class Builder(val activity: FragmentActivity) {
         internal var isShowDialog = HttpConfig.isShowDialog
@@ -100,6 +103,7 @@ class HttpOptions(private val builder: Builder) {
         internal var parseDataKey = HttpConfig.parseDataKey
         internal var jobKey = System.currentTimeMillis().toString()
         internal var noProxy = true
+        internal var httpLogEvent = HttpConfig.httpLogEvent
 
         init {
             activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -247,6 +251,13 @@ class HttpOptions(private val builder: Builder) {
             this.dataKey = dataKey
             this.successCode = successCode
             this.parseDataKey = parseDataKey
+        }
+
+        /**
+         * 设置日志打印输出接口
+         */
+        fun setHttpLogEvent(httpLogEvent: HttpLogEvent) = apply {
+            this.httpLogEvent = httpLogEvent
         }
 
         fun build(): HttpOptions {

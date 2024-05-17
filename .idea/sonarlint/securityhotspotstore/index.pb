@@ -127,10 +127,6 @@ l
 .app/src/main/res/xml/data_extraction_rules.xml,3\b\3bc4db92963be77ebed9d7a4fff09127a1110e4d
 R
 "app/src/main/res/xml/filepaths.xml,5\5\5519b0f76ce5da238b261a1f507da72fbd4bea7d
-‚
-RFlowHttp/build/generated/source/buildConfig/debug/com/bhm/network/BuildConfig.java,b\e\bee05fe13e8cc6edaba8ebded3bdd1ae5a58213e
-}
-Mapp/build/generated/source/buildConfig/debug/com/bhm/netcore/BuildConfig.java,8\6\86c3ec22a16becef982173bf32b208c4b5ccd1d8
 U
 %app/src/main/res/xml/backup_rules.xml,e\0\e0bc1eda8e2c689cb79d5b6e5cfd11385f06c2b8
 `
@@ -155,3 +151,7 @@ R
 "app/src/main/res/values/dimens.xml,c\3\c3c1811dec2dbad2deeafb9aad505ca9631da740
 <
 build.gradle,f\0\f07866736216be0ee2aba49e392191aeae700a35
+t
+DFlowHttp/src/main/java/com/bhm/network/core/callback/HttpLogEvent.kt,2\c\2ca3ad7a57bd866376b7ceb1c969212cf08e5a52
+m
+=FlowHttp/src/main/java/com/bhm/network/define/HttpLogLevel.kt,4\1\4137b2b437b9e6ab40b0a685ab37ef0908370aef

@@ -2,7 +2,7 @@
 
 package com.bhm.network.core
 
-import android.util.Log
+import com.bhm.network.define.CommonUtil
 import kotlinx.coroutines.Job
 
 /**
@@ -12,6 +12,8 @@ import kotlinx.coroutines.Job
 internal class JobManager private constructor() {
 
     private var jobMap: HashMap<String, Job> = HashMap(1)
+
+    private var httpOptions: HttpOptions? = null
 
     companion object {
 
@@ -28,11 +30,16 @@ internal class JobManager private constructor() {
         }
     }
 
+    fun setHttpOptions(httpOptions: HttpOptions) {
+        this.httpOptions = httpOptions
+    }
+
     fun addJob(key: String, job: Job) {
         if (jobMap.containsValue(job)) {
             removeJob(job)
         }
         jobMap[key] = job
+        CommonUtil.logger(httpOptions, javaClass.simpleName, "添加key=$key Http请求任务")
     }
 
     fun clear() {
@@ -47,7 +54,7 @@ internal class JobManager private constructor() {
             val job = jobMap[key]
             jobMap.remove(key)
             job?.cancel()
-            Log.d("JobManager", "remove JobTask by key")
+            CommonUtil.logger(httpOptions, javaClass.simpleName, "通过key=$key 移除Http请求任务")
         }
     }
 
@@ -64,7 +71,7 @@ internal class JobManager private constructor() {
                 }
             }
             job?.cancel()
-            Log.d("JobManager", "remove JobTask by job")
+            CommonUtil.logger(httpOptions, javaClass.simpleName, "通过Job移除Http请求任务")
         }
     }
 

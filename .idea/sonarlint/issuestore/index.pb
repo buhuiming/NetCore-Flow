@@ -157,7 +157,7 @@ v
 FFlowHttp/src/main/java/com/bhm/network/core/NetCoreConverterFactory.kt,b\4\b4eef039ecfeb4c95ea6fe2ab9f3cb52d4e330f6
 w
 GFlowHttp/src/main/java/com/bhm/network/core/GsonRequestBodyConverter.kt,3\d\3dc8921b06cf2bdf2c18e16e07f92f482aff756c
-‚
-RFlowHttp/build/generated/source/buildConfig/debug/com/bhm/network/BuildConfig.java,b\e\bee05fe13e8cc6edaba8ebded3bdd1ae5a58213e
-}
-Mapp/build/generated/source/buildConfig/debug/com/bhm/netcore/BuildConfig.java,8\6\86c3ec22a16becef982173bf32b208c4b5ccd1d8
+t
+DFlowHttp/src/main/java/com/bhm/network/core/callback/HttpLogEvent.kt,2\c\2ca3ad7a57bd866376b7ceb1c969212cf08e5a52
+m
+=FlowHttp/src/main/java/com/bhm/network/define/HttpLogLevel.kt,4\1\4137b2b437b9e6ab40b0a685ab37ef0908370aef
