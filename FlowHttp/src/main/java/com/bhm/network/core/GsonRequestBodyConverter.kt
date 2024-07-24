@@ -23,15 +23,10 @@ import java.nio.charset.Charset
  * @author Buhuiming
  * @date 2023/11/22/ 17:39
  */
-internal class GsonRequestBodyConverter<T>(gson: Gson, adapter: TypeAdapter<T>) :
-    Converter<T, RequestBody> {
-    private val gson: Gson
+internal class GsonRequestBodyConverter<T>(
+    private val gson: Gson,
     private val adapter: TypeAdapter<T>
-
-    init {
-        this.gson = gson
-        this.adapter = adapter
-    }
+) : Converter<T, RequestBody> {
 
     @Throws(IOException::class)
     override fun convert(value: T): RequestBody {

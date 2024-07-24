@@ -11,9 +11,10 @@ import com.bhm.network.core.HttpConfig.Companion.httpLoadingDialog
 import com.bhm.network.core.HttpConfig.Companion.writtenLength
 import com.bhm.network.core.callback.CallBackImp
 import com.bhm.network.core.callback.HttpLogEvent
-import com.bhm.network.define.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import com.bhm.network.define.CODE_KEY
+import com.bhm.network.define.DATA_KEY
+import com.bhm.network.define.MESSAGE_KEY
+import com.bhm.network.define.OK_CODE
 import okhttp3.OkHttpClient
 
 /**

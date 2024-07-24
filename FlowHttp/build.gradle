@@ -1,6 +1,36 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
+}
+
+//ext.GROUP = "com.lute.network"
+//ext.POM_ARTIFACT_ID = "NetCore-Flow"
+//ext.VERSION_NAME = "1.6.0"
+////引用gradle_upload.gradle
+//apply from: "${project.rootDir}/maven_upload.gradle"
+
+afterEvaluate {
+    publishing {
+        publications {
+            // 这个mavenJava可以随便填，只是一个任务名字而已
+            // MavenPublication必须有，这个是调用的任务类
+            mavenJava(MavenPublication) {
+                // 这里头是artifacts的配置信息，不填会采用默认的
+                groupId = 'com.github.buhuiming'
+                artifactId = 'NetCore-Flow'
+                version = '1.6.0'
+
+                from components.release
+                artifact androidSourcesJar //打包源码，去除这行打的包将看不到源码
+            }
+        }
+    }
+}
+// 用于打包源代码的任务
+tasks.register('androidSourcesJar', Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
 }
 
 android {
@@ -19,24 +49,26 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
+    namespace "com.bhm.network"
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.0'
-    implementation 'androidx.lifecycle:lifecycle-common:2.6.1'
-    // Retrofit
-    api 'com.squareup.retrofit2:retrofit:2.9.0'
-    api 'com.squareup.retrofit2:converter-gson:2.9.0'
-    api 'com.squareup.okhttp3:logging-interceptor:4.11.0'
-    api 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.lifecycle:lifecycle-common:2.8.3'
+    // Retrofit https://github.com/square/retrofit
+    api 'com.squareup.retrofit2:retrofit:2.11.0'
+    api 'com.squareup.retrofit2:converter-gson:2.11.0'
+    api 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    //https://github.com/square/okhttp
+    api 'com.squareup.okhttp3:okhttp:4.12.0'
 
-    implementation  'androidx.appcompat:appcompat:1.6.1'
-    implementation  'androidx.fragment:fragment:1.5.7'
+    implementation  'androidx.appcompat:appcompat:1.7.0'
+    implementation  'androidx.fragment:fragment-ktx:1.8.1'
 }

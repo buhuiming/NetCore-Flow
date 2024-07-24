@@ -13,9 +13,6 @@ class DownloadInterceptor {
     fun make(builder: HttpOptions): Interceptor {
         return Interceptor { chain: Interceptor.Chain ->
             val response = chain.proceed(chain.request())
-            response.body?.let {
-
-            }
             response.newBuilder().body(
                 response.body?.let { DownloadResponseBody(it, builder) }
             ).build()

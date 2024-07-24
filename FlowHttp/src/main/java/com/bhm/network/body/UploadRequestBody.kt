@@ -54,26 +54,26 @@ class UploadRequestBody(private val mRequestBody: RequestBody, private val httpO
         @Throws(IOException::class)
         override fun write(source: Buffer, byteCount: Long) {
             super.write(source, byteCount)
-            httpOptions?.callBack?.let { callBack ->
-                if (callBack is UploadCallBack<*>) {
-                    if (contentLength == 0L) {
-                        contentLength = contentLength()
-                    }
-                    if (bytesWritten == 0L) {
-                        httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
-                            CommonUtil.logger(httpOptions, "upLoad-- > ", "begin upLoad")
-                        }
-                    }
-                    bytesWritten += byteCount
-                    val progress = (bytesWritten * 100 / contentLength).toInt()
-                    httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
-                        callBack.onProgress(
-                            if (progress > 100) 100 else progress,
-                            byteCount,
-                            contentLength
-                        )
-                    }
+            if (httpOptions?.callBack == null || httpOptions.callBack !is UploadCallBack<*>) {
+                return
+            }
+            if (contentLength == 0L) {
+                contentLength = contentLength()
+            }
+            if (bytesWritten == 0L && httpOptions.isLogOutPut) {
+                httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                    CommonUtil.logger(httpOptions, "upLoad-- > ", "begin upLoad")
                 }
+            }
+            bytesWritten += byteCount
+            val progress = (bytesWritten * 100 / contentLength).toInt()
+            val callBack = httpOptions.callBack as UploadCallBack<*>
+            httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                callBack.onProgress(
+                    if (progress > 100) 100 else progress,
+                    byteCount,
+                    contentLength
+                )
             }
         }
     }

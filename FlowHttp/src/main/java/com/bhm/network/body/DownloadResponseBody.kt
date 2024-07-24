@@ -44,39 +44,40 @@ class DownloadResponseBody(
             @SuppressLint("CheckResult")
             @Throws(IOException::class)
             override fun read(sink: Buffer, byteCount: Long): Long {
+                if (httpOptions.callBack == null || httpOptions.callBack !is DownloadCallBack) {
+                    return super.read(sink, byteCount)
+                }
                 val bytesRead = super.read(sink, byteCount)
-                // read() returns the number of bytes read, or -1 if this source is exhausted.
-                httpOptions.callBack?.let { callBack ->
-                    if (callBack is DownloadCallBack) {
-                        if (totalBytesRead == 0L && bytesRead != -1L) {
-                            CommonUtil.deleteFile(httpOptions, totalBytes)
-                            httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
-                                CommonUtil.logger(httpOptions, "DownLoad-- > ", "begin downLoad")
-                            }
+                val callBack = httpOptions.callBack as DownloadCallBack
+                if (totalBytesRead == 0L && bytesRead != -1L) {
+                    CommonUtil.deleteFile(httpOptions, totalBytes)
+                    if (httpOptions.isLogOutPut) {
+                        httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                            CommonUtil.logger(httpOptions, "DownLoad-- > ", "begin downLoad")
                         }
-                        totalBytesRead += if (bytesRead != -1L) bytesRead else 0
-                        if (bytesRead != -1L) {
-                            val progress = (totalBytesRead * 100 / totalBytes).toInt()
-                            httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
-                                callBack.onProgress(
-                                    if (progress > 100) 100 else progress,
-                                    bytesRead,
-                                    totalBytes
-                                )
-                            }
-                            if (totalBytesRead == totalBytes) {
-                                httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
-                                    callBack.onProgress(100, bytesRead, totalBytes)
-                                    CommonUtil.logger(httpOptions, "DownLoad-- > ", "finish downLoad")
-                                    if (null != httpOptions.dialog && httpOptions.isShowDialog) {
-                                        httpOptions.dialog?.dismissLoading(httpOptions.activity)
-                                    }
-                                }
-                            }
-                        }
-                        CommonUtil.writeFile(sink.inputStream(), httpOptions)
                     }
                 }
+                totalBytesRead += if (bytesRead != -1L) bytesRead else 0
+                if (bytesRead != -1L) {
+                    val progress = (totalBytesRead * 100 / totalBytes).toInt()
+                    httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                        callBack.onProgress(
+                            if (progress > 100) 100 else progress,
+                            bytesRead,
+                            totalBytes
+                        )
+                    }
+                    if (totalBytesRead == totalBytes) {
+                        httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                            callBack.onProgress(100, bytesRead, totalBytes)
+                            CommonUtil.logger(httpOptions, "DownLoad-- > ", "finish downLoad")
+                            if (null != httpOptions.dialog && httpOptions.isShowDialog) {
+                                httpOptions.dialog?.dismissLoading(httpOptions.activity)
+                            }
+                        }
+                    }
+                }
+                CommonUtil.writeFile(sink.inputStream(), httpOptions)
                 return bytesRead
             }
         }
