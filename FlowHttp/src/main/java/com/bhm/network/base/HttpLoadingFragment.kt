@@ -98,6 +98,9 @@ open class HttpLoadingFragment : DialogFragment() {
                             JobManager.get().removeJob(builder?.jobKey?: "")
                         }
                         cancelDialogEvent?.invoke()
+                        if (cancelDialogEvent == null) {
+                            dismiss()
+                        }
                         return@OnKeyListener true
                     }
                     if (System.currentTimeMillis() - onBackPressed > 1000) {
@@ -105,6 +108,9 @@ open class HttpLoadingFragment : DialogFragment() {
                     } else {
                         JobManager.get().removeJob(builder?.jobKey?: "")
                         cancelDialogEvent?.invoke()
+                        if (cancelDialogEvent == null) {
+                            dismiss()
+                        }
                     }
                 }
                 true

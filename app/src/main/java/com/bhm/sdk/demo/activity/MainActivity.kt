@@ -2,6 +2,7 @@ package com.bhm.sdk.demo.activity
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -65,6 +66,7 @@ open class MainActivity : FragmentActivity() {
     private var permissionRefuse: ((refusePermissions: ArrayList<String>) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()
@@ -114,6 +116,7 @@ open class MainActivity : FragmentActivity() {
         main_recycle_view?.setHasFixedSize(false)
         adapter = MainUIAdapter(items)
         main_recycle_view?.adapter = adapter
+        doGet()
     }
 
     private val items: MutableList<String?>
@@ -206,7 +209,7 @@ open class MainActivity : FragmentActivity() {
                 })
                 .setDialogAttribute(
                     isShowDialog = true,
-                    cancelable = true,
+                    cancelable = false,
                     dialogDismissInterruptRequest = true
                 ).build())//默认使用Application的配置
             .setBaseUrl("http://news-at.zhihu.com")
@@ -250,7 +253,7 @@ open class MainActivity : FragmentActivity() {
             .setLoadingDialog(MyHttpLoadingDialog())
             .setDialogAttribute(
                 isShowDialog = true,
-                cancelable = true,
+                cancelable = false,
                 dialogDismissInterruptRequest = false
             )
             .setIsLogOutPut(true)
