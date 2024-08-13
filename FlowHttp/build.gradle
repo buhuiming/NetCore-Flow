@@ -6,7 +6,7 @@ plugins {
 
 //ext.GROUP = "com.lute.network"
 //ext.POM_ARTIFACT_ID = "NetCore-Flow"
-//ext.VERSION_NAME = "1.6.0"
+//ext.VERSION_NAME = "1.6.1"
 ////引用gradle_upload.gradle
 //apply from: "${project.rootDir}/maven_upload.gradle"
 
@@ -19,7 +19,7 @@ afterEvaluate {
                 // 这里头是artifacts的配置信息，不填会采用默认的
                 groupId = 'com.github.buhuiming'
                 artifactId = 'NetCore-Flow'
-                version = '1.6.0'
+                version = '1.6.1'
 
                 from components.release
                 artifact androidSourcesJar //打包源码，去除这行打的包将看不到源码
@@ -61,7 +61,7 @@ android {
 
 dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'androidx.lifecycle:lifecycle-common:2.8.3'
+    implementation 'androidx.lifecycle:lifecycle-common:2.8.4'
     // Retrofit https://github.com/square/retrofit
     api 'com.squareup.retrofit2:retrofit:2.11.0'
     api 'com.squareup.retrofit2:converter-gson:2.11.0'
@@ -70,5 +70,5 @@ dependencies {
     api 'com.squareup.okhttp3:okhttp:4.12.0'
 
     implementation  'androidx.appcompat:appcompat:1.7.0'
-    implementation  'androidx.fragment:fragment-ktx:1.8.1'
+    implementation  'androidx.fragment:fragment-ktx:1.8.2'
 }
