@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
-import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.KeyEvent
@@ -13,9 +12,13 @@ import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.bhm.network.R
+import com.bhm.network.base.HttpLoadingDialog.Companion.KEY_DIALOG_CANCELABLE
+import com.bhm.network.base.HttpLoadingDialog.Companion.KEY_DIALOG_DIALOG_DISMISS_INTERRUPT_REQUEST
+import com.bhm.network.base.HttpLoadingDialog.Companion.KEY_DIALOG_LOADING_TITLE
+import com.bhm.network.base.HttpLoadingDialog.Companion.KEY_JOB_ID
 import com.bhm.network.core.HttpOptions
 import com.bhm.network.core.JobManager
-import java.util.*
+import java.util.Objects
 
 open class HttpLoadingFragment : DialogFragment() {
 
@@ -23,16 +26,20 @@ open class HttpLoadingFragment : DialogFragment() {
 
     private var cancelDialogEvent: (() -> Unit)? = null
 
-    var builder: HttpOptions? = null
+    var dialogCancelable: Boolean = false
+
+    var isDialogDismissInterruptRequest: Boolean = false
+
+    var jobKey: String = ""
+
+    var loadingTitle: String = ""
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arguments?.getSerializable("httpOptions", HttpOptions::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            arguments?.getSerializable("httpOptions") as HttpOptions?
-        }
+        dialogCancelable = arguments?.getBoolean(KEY_DIALOG_CANCELABLE)?: false
+        isDialogDismissInterruptRequest = arguments?.getBoolean(KEY_DIALOG_DIALOG_DISMISS_INTERRUPT_REQUEST)?: false
+        jobKey = arguments?.getString(KEY_JOB_ID)?: ""
+        loadingTitle = arguments?.getString(KEY_DIALOG_LOADING_TITLE)?: ""
     }
 
     override fun show(manager: FragmentManager, tag: String?) {
@@ -88,14 +95,14 @@ open class HttpLoadingFragment : DialogFragment() {
         if (activity != null) {
             dialog.setOwnerActivity(requireActivity())
             dialog.setCanceledOnTouchOutside(false) //这个值最好设置成false，点击其他区域关闭loading，体验效果不佳
-            dialog.setCancelable(builder?.isCancelable?: false)
+            dialog.setCancelable(dialogCancelable)
             dialog.setOnKeyListener(DialogInterface.OnKeyListener { _, i, keyEvent ->
                 if (i == KeyEvent.KEYCODE_BACK && dialog.isShowing
                     && keyEvent.action == KeyEvent.ACTION_UP
                 ) {
-                    if (builder?.isCancelable == true) {
-                        if (builder?.isDialogDismissInterruptRequest == true) {
-                            JobManager.get().removeJob(builder?.jobKey?: "")
+                    if (dialogCancelable) {
+                        if (isDialogDismissInterruptRequest) {
+                            JobManager.get().removeJob(jobKey)
                         }
                         cancelDialogEvent?.invoke()
                         if (cancelDialogEvent == null) {
@@ -106,7 +113,7 @@ open class HttpLoadingFragment : DialogFragment() {
                     if (System.currentTimeMillis() - onBackPressed > 1000) {
                         onBackPressed = System.currentTimeMillis()
                     } else {
-                        JobManager.get().removeJob(builder?.jobKey?: "")
+                        JobManager.get().removeJob(jobKey)
                         cancelDialogEvent?.invoke()
                         if (cancelDialogEvent == null) {
                             dismiss()
@@ -132,8 +139,8 @@ open class HttpLoadingFragment : DialogFragment() {
             ) // 设置布局
             textView = it.findViewById(R.id.dialog_text_loading)
         }
-        if (!TextUtils.isEmpty(builder?.loadingTitle)) {
-            textView?.text = builder?.loadingTitle
+        if (!TextUtils.isEmpty(loadingTitle)) {
+            textView?.text = loadingTitle
         }
         return dialog
     }

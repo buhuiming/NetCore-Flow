@@ -16,12 +16,11 @@ import com.bhm.network.define.DATA_KEY
 import com.bhm.network.define.MESSAGE_KEY
 import com.bhm.network.define.OK_CODE
 import okhttp3.OkHttpClient
-import java.io.Serializable
 
 /**
  * Created by bhm on 2023/5/6.
  */
-class HttpOptions(private val builder: Builder) : Serializable {
+class HttpOptions(private val builder: Builder) {
     var currentRequestDateTamp: Long = 0
     val activity: FragmentActivity
         get() = builder.activity
