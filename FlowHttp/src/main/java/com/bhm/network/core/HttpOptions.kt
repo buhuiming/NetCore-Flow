@@ -78,6 +78,10 @@ class HttpOptions(private val builder: Builder) {
         get() = builder.noProxy
     val httpLogEvent: HttpLogEvent?
         get() = builder.httpLogEvent
+    val cacheDuration: Long
+        get() = builder.cacheDuration
+    val cacheDurationNoNet: Long
+        get() = builder.cacheDurationNoNet
 
     class Builder(val activity: FragmentActivity) {
         internal var isShowDialog = HttpConfig.isShowDialog
@@ -105,6 +109,8 @@ class HttpOptions(private val builder: Builder) {
         internal var jobKey = System.currentTimeMillis().toString()
         internal var noProxy = true
         internal var httpLogEvent = HttpConfig.httpLogEvent
+        internal var cacheDuration: Long = HttpConfig.cacheDuration
+        internal var cacheDurationNoNet: Long = HttpConfig.cacheDurationNoNet
 
         init {
             activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -259,6 +265,16 @@ class HttpOptions(private val builder: Builder) {
          */
         fun setHttpLogEvent(httpLogEvent: HttpLogEvent) = apply {
             this.httpLogEvent = httpLogEvent
+        }
+
+        /**
+         * 设置缓存时间
+         * @param cacheDuration 有网络时缓存时间，单位秒
+         * @param cacheDurationNoNet 没有网络时缓存时间，单位秒
+         */
+        fun setCacheDuration(cacheDuration: Long, cacheDurationNoNet: Long) = apply {
+            this.cacheDuration = cacheDuration
+            this.cacheDurationNoNet = cacheDurationNoNet
         }
 
         fun build(): HttpOptions {
