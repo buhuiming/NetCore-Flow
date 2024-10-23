@@ -106,7 +106,7 @@ class HttpOptions(private val builder: Builder) {
         internal var dataKey = HttpConfig.dataKey
         internal var successCode = HttpConfig.successCode
         internal var parseDataKey = HttpConfig.parseDataKey
-        internal var jobKey = System.currentTimeMillis().toString()
+        internal var jobKey = System.currentTimeMillis().toString() + HttpConfig.generateRandomString()
         internal var noProxy = true
         internal var httpLogEvent = HttpConfig.httpLogEvent
         internal var cacheDuration: Long = HttpConfig.cacheDuration

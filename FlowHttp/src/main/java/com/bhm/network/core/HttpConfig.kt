@@ -282,6 +282,17 @@ class HttpConfig(builder: Builder) {
         fun writtenLength(): Long {
             return writtenLength
         }
+
+        private val characters = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+
+        /**
+         * 从[characters]中随机生成3个字符组成的字符串
+         */
+        fun generateRandomString(): String {
+            return (1..3)
+                .map { characters.random() }
+                .joinToString("")
+        }
     }
 
     init {
