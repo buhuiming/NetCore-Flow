@@ -3,6 +3,8 @@ def SNAPSHOT_REPOSITORY_URL = "http://localhost:8081/nexus/content/repositories/
 def NEXUS_USERNAME = "admin"
 def NEXUS_PASSWORD = "admin123"
 
+apply plugin: 'maven-publish'
+
 afterEvaluate {
     publishing {
         repositories {
@@ -28,41 +30,35 @@ afterEvaluate {
         publications {
             Production(MavenPublication) {
                 from components.release
-                artifact androidSourcesJar //打包源码，去除这行打的包将看不到源码
                 groupId = GROUP
                 artifactId = POM_ARTIFACT_ID
                 version = VERSION_NAME
+                artifacts {
+                    if (!project.plugins.hasPlugin('kotlin-android')) {
+                        artifact tasks.named("androidSourcesJar").get()
+                    }
+                }
             }
             Develop(MavenPublication) {
                 from components.debug
-                artifact androidSourcesJar //打包源码，去除这行打的包将看不到源码
                 groupId = GROUP
                 artifactId = POM_ARTIFACT_ID
                 version = "${VERSION_NAME}-SNAPSHOT"
+                artifacts {
+                    if (!project.plugins.hasPlugin('kotlin-android')) {
+                        artifact tasks.named("androidSourcesJar").get()
+                    }
+                }
             }
         }
     }
-    artifacts {
-        archives androidSourcesJar
-        archives androidJavadocsJar
+    // 显式声明任务依赖关系
+    tasks.matching { it.name.startsWith("generateMetadataFileFor") }.configureEach {
+        dependsOn tasks.named("androidSourcesJar")
     }
 }
 // 用于打包源代码的任务
 task androidSourcesJar(type: Jar) {
     archiveClassifier.set('sources')
     from android.sourceSets.main.java.srcDirs
-}
-task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    archiveClassifier.set('javadoc')
-    from androidJavadocs.destinationDir
-}
-//解决 JavaDoc 中文注释生成失败的问题
-tasks.withType(Javadoc) {
-    options.addStringOption('Xdoclint:none', '-quiet')
-    options.addStringOption('encoding', 'UTF-8')
-    options.addStringOption('charSet', 'UTF-8')
 }
