@@ -10,6 +10,9 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,24 +33,14 @@ import com.bhm.sdk.demo.tools.MyHttpLoadingDialog
 import com.bhm.sdk.demo.tools.Utils
 import com.bhm.sdk.demo.tools.Utils.getFile
 import kotlinx.coroutines.Job
-import okhttp3.Call
-import okhttp3.EventListener
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.MultipartBody.Part.Companion.createFormData
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
-import okio.BufferedSink
-import okio.IOException
-import okio.source
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 @Suppress("PrivatePropertyName")
 @SuppressLint("CheckResult")
@@ -69,6 +62,29 @@ open class MainActivity : FragmentActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowCompat.getInsetsController(
+            window,
+            window.decorView
+        )
+        controller.isAppearanceLightStatusBars = true
+        controller.isAppearanceLightNavigationBars = true
+        val view = findViewById<View>(R.id.progressBarHorizontal)
+        val originalTopPadding: Int = view.paddingTop
+        val originalLeftPadding: Int = view.getPaddingLeft()
+        val originalRightPadding: Int = view.getPaddingRight()
+        val originalBottomPadding: Int = view.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v: View, insets: WindowInsetsCompat ->
+            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            v.setPadding(
+                originalLeftPadding,
+                statusBars.top + originalTopPadding,
+                originalRightPadding,
+                originalBottomPadding
+            )
+            insets
+        }
+        ViewCompat.requestApplyInsets(view)
         permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()
         ) {
             val refusePermission: ArrayList<String> = ArrayList()
@@ -375,11 +391,11 @@ open class MainActivity : FragmentActivity() {
         downloadJob = RequestManager.get()
             .buildRequest<ResponseBody>()
             .setHttpOptions(builder)
-            .setBaseUrl("http://s.downpp.com/")
+            .setBaseUrl("https://count.liqucn.com/")
             .downloadExecute(
                 HttpApi::class.java,
                 {
-                    it.downLoad("bytes=$downLoadLength-", "http://s1.downpp.com/apk6/com.juying.xstq_v1.1.3_2265.com.apk")
+                    it.downLoad("bytes=$downLoadLength-", "https://count.liqucn.com/d.php?id=78092683095&urlos=android&from_type=web")
                 },
                 {
                     progress { progress, bytesWritten, contentLength ->
