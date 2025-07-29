@@ -1,5 +1,7 @@
 # NetCore
 
+### 当前版本[![](https://jitpack.io/v/buhuiming/NetCore-Flow.svg)](https://jitpack.io/#buhuiming/NetCore-Flow) 
+
 ### 用法
 
         allprojects {
