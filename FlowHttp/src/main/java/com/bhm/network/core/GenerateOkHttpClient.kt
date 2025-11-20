@@ -48,7 +48,7 @@ open class GenerateOkHttpClient {
             .addInterceptor(DownloadInterceptor().make(builder))
             .addInterceptor(UploadInterceptor().make(builder))
             .addNetworkInterceptor(CacheInterceptor().make(builder)) //设置Cache拦截器
-            .cache(getCache(builder.activity))
+            .cache(getCache(builder.context))
             .connectTimeout(timeOutConnection.toLong(), TimeUnit.SECONDS) //time out
             .readTimeout(timeOutRead.toLong(), TimeUnit.SECONDS)
             .writeTimeout(timeOutRead.toLong(), TimeUnit.SECONDS)

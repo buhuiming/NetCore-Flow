@@ -1,6 +1,6 @@
 package com.bhm.network.core
 
-import android.app.Activity
+import android.content.Context
 import android.webkit.WebSettings
 import okhttp3.Cache
 import java.io.File
@@ -13,9 +13,9 @@ object HttpCache {
     private const val HTTP_RESPONSE_DISK_CACHE_MAX_SIZE = 50 * 1024 * 1024
 
     @JvmStatic
-    fun getCache(activity: Activity): Cache {
+    fun getCache(context: Context): Cache {
         return Cache(
-            File(activity.applicationContext.cacheDir.absolutePath + File.separator + "data/NetCache"),
+            File(context.applicationContext.cacheDir.absolutePath + File.separator + "data/NetCache"),
             HTTP_RESPONSE_DISK_CACHE_MAX_SIZE.toLong()
         )
     }
@@ -25,10 +25,10 @@ object HttpCache {
      * @return UserAgent
      */
     @JvmStatic
-    fun getUserAgent(activity: Activity?): String {
+    fun getUserAgent(context: Context?): String {
         val userAgent =
             try {
-                WebSettings.getDefaultUserAgent(activity)
+                WebSettings.getDefaultUserAgent(context)
             } catch (e: Exception) {
                 System.getProperty("http.agent")?: ""
             }

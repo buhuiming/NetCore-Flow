@@ -6,7 +6,7 @@ plugins {
 
 //ext.GROUP = "com.lute.network"
 //ext.POM_ARTIFACT_ID = "NetCore-Flow"
-//ext.VERSION_NAME = "1.7.1"
+//ext.VERSION_NAME = "1.7.3"
 ////引用gradle_upload.gradle
 //apply from: "${project.rootDir}/maven_upload.gradle"
 
@@ -19,7 +19,7 @@ afterEvaluate {
                 // 这里头是artifacts的配置信息，不填会采用默认的
                 groupId = 'com.github.buhuiming'
                 artifactId = 'NetCore-Flow'
-                version = '1.7.1'
+                version = '1.7.3'
 
                 from components.release
                 if (!project.plugins.hasPlugin('kotlin-android')) {

@@ -1,11 +1,14 @@
 package com.bhm.network.body
 
 import android.annotation.SuppressLint
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.bhm.network.core.HttpOptions
 import com.bhm.network.core.callback.DownloadCallBack
 import com.bhm.network.define.CommonUtil
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.ResponseBody
@@ -52,7 +55,7 @@ class DownloadResponseBody(
                 if (totalBytesRead == 0L && bytesRead != -1L) {
                     CommonUtil.deleteFile(httpOptions, totalBytes)
                     if (httpOptions.isLogOutPut) {
-                        httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                        getScope().launch(Dispatchers.Main) {
                             CommonUtil.logger(httpOptions, "DownLoad-- > ", "begin downLoad")
                         }
                     }
@@ -60,7 +63,7 @@ class DownloadResponseBody(
                 totalBytesRead += if (bytesRead != -1L) bytesRead else 0
                 if (bytesRead != -1L) {
                     val progress = (totalBytesRead * 100 / totalBytes).toInt()
-                    httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                    getScope().launch(Dispatchers.Main) {
                         callBack.onProgress(
                             if (progress > 100) 100 else progress,
                             bytesRead,
@@ -68,11 +71,11 @@ class DownloadResponseBody(
                         )
                     }
                     if (totalBytesRead == totalBytes) {
-                        httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                        getScope().launch(Dispatchers.Main) {
                             callBack.onProgress(100, bytesRead, totalBytes)
                             CommonUtil.logger(httpOptions, "DownLoad-- > ", "finish downLoad")
-                            if (null != httpOptions.dialog && httpOptions.isShowDialog) {
-                                httpOptions.dialog?.dismissLoading(httpOptions.activity)
+                            if (null != httpOptions.dialog && httpOptions.isShowDialog && httpOptions.context is FragmentActivity) {
+                                httpOptions.dialog?.dismissLoading(httpOptions.context as FragmentActivity)
                             }
                         }
                     }
@@ -81,5 +84,12 @@ class DownloadResponseBody(
                 return bytesRead
             }
         }
+    }
+
+    private fun getScope(): CoroutineScope {
+        if (httpOptions.context is FragmentActivity) {
+            return (httpOptions.context as FragmentActivity).lifecycleScope
+        }
+        return MainScope()
     }
 }

@@ -2,6 +2,7 @@ package com.bhm.network.base
 
 import android.app.Activity
 import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
 import com.bhm.network.core.HttpOptions
 
 /**
@@ -28,14 +29,14 @@ open class HttpLoadingDialog {
      * isCancelable true,单击返回键，dialog关闭；false,1s内双击返回键，dialog关闭，否则dialog不关闭
      */
     fun showLoading(builder: HttpOptions) {
-        if (!builder.activity.isFinishing && builder.isShowDialog) {
+        if (builder.context is FragmentActivity && !(builder.context as FragmentActivity).isFinishing && builder.isShowDialog) {
             if (httpLoadingFragment == null) {
                 httpLoadingFragment = initDialog(builder)
                 httpLoadingFragment?.setCancelDialogEvent{
-                    cancelLoading(builder.activity)
+                    cancelLoading(builder.context as FragmentActivity)
                 }
             }
-            val fm = builder.activity.supportFragmentManager
+            val fm = (builder.context as FragmentActivity).supportFragmentManager
             showAgain =
                 if (httpLoadingFragment?.isAdded == false && null == fm.findFragmentByTag("default")) {
                     httpLoadingFragment?.show(fm, "default")

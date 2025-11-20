@@ -2,6 +2,7 @@
 
 package com.bhm.network.core
 
+import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -22,8 +23,8 @@ import okhttp3.OkHttpClient
  */
 class HttpOptions(private val builder: Builder) {
     var currentRequestDateTamp: Long = 0
-    val activity: FragmentActivity
-        get() = builder.activity
+    val context: Context
+        get() = builder.context
     var callBack: CallBackImp<*>? = null
     val isShowDialog: Boolean
         get() = builder.isShowDialog
@@ -83,7 +84,7 @@ class HttpOptions(private val builder: Builder) {
     val cacheDurationNoNet: Long
         get() = builder.cacheDurationNoNet
 
-    class Builder(val activity: FragmentActivity) {
+    class Builder(val context: Context) {
         internal var isShowDialog = HttpConfig.isShowDialog
         internal var isCancelable = cancelable()
         internal var dialog = httpLoadingDialog
@@ -113,20 +114,22 @@ class HttpOptions(private val builder: Builder) {
         internal var cacheDurationNoNet: Long = HttpConfig.cacheDurationNoNet
 
         init {
-            activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
-                override fun onDestroy(owner: LifecycleOwner) {
-                    super.onDestroy(owner)
-                    if (isDialogDismissInterruptRequest) {
-                        JobManager.get().removeJob(jobKey)
+            if (context is FragmentActivity) {
+                context.lifecycle.addObserver(object : DefaultLifecycleObserver {
+                    override fun onDestroy(owner: LifecycleOwner) {
+                        super.onDestroy(owner)
+                        if (isDialogDismissInterruptRequest) {
+                            JobManager.get().removeJob(jobKey)
+                        }
+                        if (context.isTaskRoot) {
+                            JobManager.get().clear()
+                        }
+                        dialog?.close()
+                        dialog = null
+                        context.lifecycle.removeObserver(this)
                     }
-                    if (activity.isTaskRoot) {
-                        JobManager.get().clear()
-                    }
-                    dialog?.close()
-                    dialog = null
-                    activity.lifecycle.removeObserver(this)
-                }
-            })
+                })
+            }
         }
 
         /**
@@ -286,11 +289,11 @@ class HttpOptions(private val builder: Builder) {
 
     companion object {
         @JvmStatic
-        fun create(activity: FragmentActivity) = Builder(activity)
+        fun create(context: Context) = Builder(context)
 
         @JvmStatic
-        fun getDefaultHttpOptions(activity: FragmentActivity): HttpOptions {
-            return create(activity)
+        fun getDefaultHttpOptions(context: Context): HttpOptions {
+            return create(context)
                 .setLoadingDialog(HttpLoadingDialog())
                 .build()
         }

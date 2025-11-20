@@ -1,7 +1,11 @@
-def RELEASE_REPOSITORY_URL = "http://localhost:8081/nexus/content/repositories/releases/"
-def SNAPSHOT_REPOSITORY_URL = "http://localhost:8081/nexus/content/repositories/snapshots/"
-def NEXUS_USERNAME = "admin"
-def NEXUS_PASSWORD = "admin123"
+//def RELEASE_REPOSITORY_URL = "http://localhost:8081/nexus/content/repositories/releases/"
+//def SNAPSHOT_REPOSITORY_URL = "http://localhost:8081/nexus/content/repositories/snapshots/"
+//def NEXUS_USERNAME = "admin"
+//def NEXUS_PASSWORD = "admin123"
+def RELEASE_REPOSITORY_URL = ""
+def SNAPSHOT_REPOSITORY_URL = ""
+def NEXUS_USERNAME = ""
+def NEXUS_PASSWORD = ""
 
 apply plugin: 'maven-publish'
 

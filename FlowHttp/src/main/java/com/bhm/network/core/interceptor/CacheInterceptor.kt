@@ -22,14 +22,14 @@ class CacheInterceptor {
     fun make(builder: HttpOptions): Interceptor {
         return Interceptor { chain ->
             var request = chain.request()
-            if (isNetworkConnected(builder.activity)) {
+            if (isNetworkConnected(builder.context)) {
                 // 有网络时, 缓存5s，根据实际情况设置
                 val maxAge = builder.cacheDuration
                 request = request.newBuilder()
                     .removeHeader(USER_AGENT)
                     .removeHeader(ACCEPT_ENCODING)
                     .header(ACCEPT_ENCODING, "identity")
-                    .header(USER_AGENT, getUserAgent(builder.activity))
+                    .header(USER_AGENT, getUserAgent(builder.context))
                     .build()
                 val response = chain.proceed(request)
                 builder.callBack?.code = response.code
@@ -46,7 +46,7 @@ class CacheInterceptor {
                     .removeHeader(USER_AGENT)
                     .removeHeader(ACCEPT_ENCODING)
                     .header(ACCEPT_ENCODING, "identity")
-                    .header(USER_AGENT, getUserAgent(builder.activity))
+                    .header(USER_AGENT, getUserAgent(builder.context))
                     .build()
                 val response = chain.proceed(request)
                 builder.callBack?.code = response.code

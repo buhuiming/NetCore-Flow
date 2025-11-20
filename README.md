@@ -12,7 +12,7 @@
         }
 
         dependencies {
-            implementation 'com.github.buhuiming:NetCore-Flow:1.7.1'
+            implementation 'com.github.buhuiming:NetCore-Flow:1.7.3'
         }
 
 #### 1、Application配置默认的全局配置项（可选）
@@ -80,7 +80,7 @@
   [RxJava3版本](https://github.com/buhuiming/NetCore)不需要添加suspend，返回类型为Observable<实体类>
 * 3、httpCall参数返回，[flow版本](https://github.com/buhuiming/NetCore-Flow)需要添加suspend，返回类型为具体实体类，
   [RxJava3版本](https://github.com/buhuiming/NetCore)不需要添加suspend，返回类型为Observable<实体类>
-* 4、activity参数，[flow版本](https://github.com/buhuiming/NetCore-Flow)为FragmentActivity，
+* 4、context参数，[flow版本](https://github.com/buhuiming/NetCore-Flow)Context，
   [RxJava3版本](https://github.com/buhuiming/NetCore)为HttpActivity
   
   

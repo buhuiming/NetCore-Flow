@@ -1,6 +1,7 @@
 package com.bhm.network.core
 
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.bhm.network.core.callback.CallBackImp
 import com.bhm.network.core.callback.CommonCallBack
@@ -9,8 +10,18 @@ import com.bhm.network.core.callback.UploadCallBack
 import com.bhm.network.define.CommonUtil
 import com.bhm.network.define.ResultException
 import com.google.gson.JsonSyntaxException
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.HttpException
 import java.util.concurrent.TimeoutException
@@ -175,8 +186,8 @@ class RequestManager private constructor() {
                     .flowOn(Dispatchers.IO)
                     .catch {
                         callBack?.onFail(it)
-                        if (null != httpOptions.dialog && httpOptions.isShowDialog) {
-                            httpOptions.dialog?.dismissLoading(httpOptions.activity)
+                        if (null != httpOptions.dialog && httpOptions.isShowDialog && httpOptions.context is FragmentActivity) {
+                            httpOptions.dialog?.dismissLoading(httpOptions.context as FragmentActivity)
                         }
                         JobManager.get().removeJob(httpOptions.jobKey)
                     }
@@ -204,7 +215,7 @@ class RequestManager private constructor() {
 
         private fun <E: Any> doBaseConsumer(callBack: CallBackImp<E>?, t: E) {
             if (httpOptions.isDialogDismissInterruptRequest) {
-                httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                getScope().launch(Dispatchers.Main) {
                     if (isActive) {
                         success(callBack, t)
                     }
@@ -218,14 +229,14 @@ class RequestManager private constructor() {
 
         private fun <E: Any> success(callBack: CallBackImp<E>?, t: E) {
             callBack?.onSuccess(t)
-            if (httpOptions.isShowDialog && null != httpOptions.dialog) {
-                httpOptions.dialog?.dismissLoading(httpOptions.activity)
+            if (httpOptions.isShowDialog && null != httpOptions.dialog && httpOptions.context is FragmentActivity) {
+                httpOptions.dialog?.dismissLoading(httpOptions.context as FragmentActivity)
             }
         }
 
         private fun <T: Any> doThrowableConsumer(callBack: CallBackImp<T>?, e: Throwable) {
             if (httpOptions.isDialogDismissInterruptRequest) {
-                httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                getScope().launch(Dispatchers.Main) {
                     if (isActive) {
                         fail(callBack, e)
                     }
@@ -239,38 +250,45 @@ class RequestManager private constructor() {
 
         private fun <T: Any> fail(callBack: CallBackImp<T>?, e: Throwable) {
             callBack?.onFail(e)
-            if (httpOptions.isShowDialog && null != httpOptions.dialog) {
-                httpOptions.dialog?.dismissLoading(httpOptions.activity)
+            if (httpOptions.isShowDialog && null != httpOptions.dialog && httpOptions.context is FragmentActivity) {
+                httpOptions.dialog?.dismissLoading(httpOptions.context as FragmentActivity)
             }
             if (httpOptions.isDefaultToast) {
                 when (e) {
                     is HttpException -> {
                         when {
                             e.code() == 404 -> {
-                                Toast.makeText(httpOptions.activity, e.message, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(httpOptions.context, e.message, Toast.LENGTH_SHORT).show()
                             }
                             e.code() == 504 -> {
-                                Toast.makeText(httpOptions.activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(httpOptions.context, "请检查网络连接！", Toast.LENGTH_SHORT).show()
                             }
                             else -> {
-                                Toast.makeText(httpOptions.activity, "请检查网络连接！", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(httpOptions.context, "请检查网络连接！", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
 
                     is IndexOutOfBoundsException, is NullPointerException, is JsonSyntaxException, is IllegalStateException, is ResultException -> {
-                        Toast.makeText(httpOptions.activity, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(httpOptions.context, "数据异常，解析失败！", Toast.LENGTH_SHORT).show()
                     }
 
                     is TimeoutException -> {
-                        Toast.makeText(httpOptions.activity, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(httpOptions.context, "连接超时，请重试！", Toast.LENGTH_SHORT).show()
                     }
 
                     else -> {
-                        Toast.makeText(httpOptions.activity, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(httpOptions.context, "请求失败，请稍后再试！", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
+        }
+
+        private fun getScope(): CoroutineScope {
+            if (httpOptions.context is FragmentActivity) {
+                return (httpOptions.context as FragmentActivity).lifecycleScope
+            }
+            return MainScope()
         }
     }
 }

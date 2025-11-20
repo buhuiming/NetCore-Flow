@@ -1,11 +1,14 @@
 package com.bhm.network.body
 
 import android.annotation.SuppressLint
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.bhm.network.core.HttpOptions
 import com.bhm.network.core.callback.UploadCallBack
 import com.bhm.network.define.CommonUtil
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -61,14 +64,14 @@ class UploadRequestBody(private val mRequestBody: RequestBody, private val httpO
                 contentLength = contentLength()
             }
             if (bytesWritten == 0L && httpOptions.isLogOutPut) {
-                httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+                getScope().launch(Dispatchers.Main) {
                     CommonUtil.logger(httpOptions, "upLoad-- > ", "begin upLoad")
                 }
             }
             bytesWritten += byteCount
             val progress = (bytesWritten * 100 / contentLength).toInt()
             val callBack = httpOptions.callBack as UploadCallBack<*>
-            httpOptions.activity.lifecycleScope.launch(Dispatchers.Main) {
+            getScope().launch(Dispatchers.Main) {
                 callBack.onProgress(
                     if (progress > 100) 100 else progress,
                     byteCount,
@@ -76,5 +79,12 @@ class UploadRequestBody(private val mRequestBody: RequestBody, private val httpO
                 )
             }
         }
+    }
+
+    private fun getScope(): CoroutineScope {
+        if (httpOptions != null && httpOptions.context is FragmentActivity) {
+            return (httpOptions.context as FragmentActivity).lifecycleScope
+        }
+        return MainScope()
     }
 }
